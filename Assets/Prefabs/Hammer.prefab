@@ -459,6 +459,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 21d2014ae201db14db1d40bbd61e5651, type: 3}
       insertIndex: -1
       addedObject: {fileID: 410268744038378051}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 21d2014ae201db14db1d40bbd61e5651, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6687546990154224530}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 21d2014ae201db14db1d40bbd61e5651, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3306288477326121757}
   m_SourcePrefab: {fileID: 100100000, guid: 21d2014ae201db14db1d40bbd61e5651, type: 3}
 --- !u!4 &3864001465432591221 stripped
 Transform:
@@ -477,10 +483,10 @@ Rigidbody:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4527349563257950671}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -577,3 +583,51 @@ MonoBehaviour:
   _profile: {fileID: 11400000, guid: 0161aea254e5d04429a30e858e1e57e7, type: 2}
   _grabbable: {fileID: 8085499225724216838}
   _rigidbody: {fileID: 8240823292147749917}
+--- !u!114 &6687546990154224530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4527349563257950671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2776d888cdffb3e44baf1938fe3dd661, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HammerRespawnLifecycle
+  hammerPrefab: {fileID: 4527349563257950671}
+  respawnDelay: 1.5
+  despawnDelayAfterSettled: 5
+  settledLinearSpeed: 0.05
+  settledAngularSpeed: 0.2
+  settledDuration: 0.75
+--- !u!114 &3306288477326121757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4527349563257950671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a02ac9dfeecebde4bad9182a9cf38fcc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HammerHandTrackingGrab
+  cameraRig: {fileID: 0}
+  leftHand: {fileID: 0}
+  rightHand: {fileID: 0}
+  leftSkeleton: {fileID: 0}
+  rightSkeleton: {fileID: 0}
+  leftHandAnchor: {fileID: 0}
+  rightHandAnchor: {fileID: 0}
+  grabRadius: 0.55
+  pinchGrabThreshold: 0.65
+  pinchReleaseThreshold: 0.3
+  fistFingerThreshold: 0.65
+  requiredFistFingers: 3
+  throwVelocityMultiplier: 1.15
+  maxThrowVelocity: 8
+  showDebugPanel: 1
+  debugPanelOffset: {x: 0, y: 0.35, z: 0}
+  debugPanelCharacterSize: 0.035
+  debugUpdateInterval: 0.1
