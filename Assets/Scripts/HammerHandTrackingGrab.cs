@@ -584,7 +584,6 @@ public class HammerHandTrackingGrab : MonoBehaviour
         int score = 0;
         if (HasUsableHand(hand)) score += 100;
         if (hand.name.Contains("DataSource")) score += 30;
-        if (hand.IsPointerPoseValid && hand.PointerPose != null) score += 20;
         if (hand.GetComponent<OVRSkeleton>() != null) score += 5;
         return score;
     }
