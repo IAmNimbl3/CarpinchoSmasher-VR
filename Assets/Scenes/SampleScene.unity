@@ -25083,7 +25083,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MetaHandTrackingWarmup
   warmupDuration: 3
   retryInterval: 0.25
-  logWarmup: 1
+  logWarmup: 0
 --- !u!1 &1430026569
 GameObject:
   m_ObjectHideFlags: 0

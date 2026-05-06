@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 
 public class HammerHandTrackingGrab : MonoBehaviour
 {
@@ -30,6 +32,8 @@ public class HammerHandTrackingGrab : MonoBehaviour
     private HammerRespawnLifecycle _lifecycle;
     private Collider[] _hammerColliders;
     private OVRHand _grabHand;
+    private OVRPlugin.Hand _grabHandType;
+    private bool _grabUsesXrInput;
     private Vector3 _localGrabPosition;
     private Quaternion _localGrabRotation;
     private Vector3 _previousGrabPosition;
@@ -40,6 +44,8 @@ public class HammerHandTrackingGrab : MonoBehaviour
     private string _leftDebug = "L: no sample";
     private string _rightDebug = "R: no sample";
     private string _lastEvent = "Idle";
+    private readonly List<InputDevice> _xrHandDevices = new();
+    private readonly List<InputFeatureUsage> _xrFeatureUsages = new();
 
     private void Awake()
     {
@@ -60,10 +66,10 @@ public class HammerHandTrackingGrab : MonoBehaviour
             return;
         }
 
-        TryBeginGrab(leftHand, leftHandAnchor);
+        TryBeginGrab(OVRPlugin.Hand.HandLeft, leftHand, leftHandAnchor);
         if (!_isGrabbed)
         {
-            TryBeginGrab(rightHand, rightHandAnchor);
+            TryBeginGrab(OVRPlugin.Hand.HandRight, rightHand, rightHandAnchor);
         }
 
         UpdateDebugPanel();
@@ -119,7 +125,7 @@ public class HammerHandTrackingGrab : MonoBehaviour
         }
     }
 
-    private void TryBeginGrab(OVRHand hand, Transform anchor)
+    private void TryBeginGrab(OVRPlugin.Hand handType, OVRHand hand, Transform anchor)
     {
         OVRSkeleton skeleton = GetSkeletonForHand(hand);
         bool hasUsableHand = HasUsableHand(hand);
@@ -130,23 +136,49 @@ public class HammerHandTrackingGrab : MonoBehaviour
 
         SetHandDebug(hand, skeleton, hasUsableHand, hasPose, poseSource, gestureActive, distance, inRange);
 
-        if (!hasUsableHand || !hasPose || !gestureActive)
+        if (hasUsableHand && hasPose && gestureActive && inRange)
+        {
+            BeginGrab(handType, hand, handPosition, handRotation, poseSource, distance, false);
+            return;
+        }
+
+        if (!TryGetFallbackHandSample(handType, out Vector3 xrPosition, out Quaternion xrRotation, out float xrSelect, out float xrGrip, out string xrSource))
+        {
+            SetXrHandDebug(handType, xrSource, false, false, xrSelect, xrGrip, -1f, false);
+            return;
+        }
+
+        bool xrGestureActive = xrSelect >= pinchGrabThreshold || xrGrip >= pinchGrabThreshold;
+        float xrDistance = GetDistanceToHammerColliders(xrPosition);
+        bool xrInRange = xrDistance <= grabRadius;
+        SetXrHandDebug(handType, xrSource, true, xrGestureActive, xrSelect, xrGrip, xrDistance, xrInRange);
+
+        if (!xrGestureActive || !xrInRange)
         {
             return;
         }
 
-        if (!inRange)
-        {
-            return;
-        }
+        BeginGrab(handType, null, xrPosition, xrRotation, xrSource, xrDistance, true);
+    }
 
+    private void BeginGrab(
+        OVRPlugin.Hand handType,
+        OVRHand hand,
+        Vector3 handPosition,
+        Quaternion handRotation,
+        string poseSource,
+        float distance,
+        bool usesXrInput)
+    {
         _isGrabbed = true;
         _grabHand = hand;
+        _grabHandType = handType;
+        _grabUsesXrInput = usesXrInput;
         _localGrabPosition = Quaternion.Inverse(handRotation) * (transform.position - handPosition);
         _localGrabRotation = Quaternion.Inverse(handRotation) * transform.rotation;
         _previousGrabPosition = handPosition;
         _grabVelocity = Vector3.zero;
-        _lastEvent = $"Grabbed {GetHandLabel(hand)} via {poseSource}";
+        _lastEvent = $"Grabbed {GetHandLabel(handType)} via {poseSource}";
         Debug.Log($"[HammerHandTrackingGrab] {_lastEvent}. Distance={distance:F2}");
 
         if (_rigidbody != null)
@@ -159,6 +191,12 @@ public class HammerHandTrackingGrab : MonoBehaviour
 
     private void UpdateGrabbedHammer()
     {
+        if (_grabUsesXrInput)
+        {
+            UpdateGrabbedHammerFromXr();
+            return;
+        }
+
         if (_grabHand == null)
         {
             ReleaseGrab();
@@ -193,10 +231,42 @@ public class HammerHandTrackingGrab : MonoBehaviour
         UpdateDebugPanel();
     }
 
+    private void UpdateGrabbedHammerFromXr()
+    {
+        if (!TryGetFallbackHandSample(_grabHandType, out Vector3 handPosition, out Quaternion handRotation, out float select, out float grip, out string source))
+        {
+            _lastEvent = $"Released {GetHandLabel(_grabHandType)}: XR pose lost";
+            ReleaseGrab();
+            return;
+        }
+
+        if (Time.deltaTime > 0f)
+        {
+            _grabVelocity = (handPosition - _previousGrabPosition) / Time.deltaTime;
+        }
+
+        _previousGrabPosition = handPosition;
+        transform.SetPositionAndRotation(
+            handPosition + handRotation * _localGrabPosition,
+            handRotation * _localGrabRotation);
+
+        bool released = select <= pinchReleaseThreshold && grip <= pinchReleaseThreshold;
+        SetXrHandDebug(_grabHandType, source, true, !released, select, grip, 0f, true);
+
+        if (released)
+        {
+            _lastEvent = $"Released {GetHandLabel(_grabHandType)}: XR gesture open";
+            ReleaseGrab();
+        }
+
+        UpdateDebugPanel();
+    }
+
     private void ReleaseGrab()
     {
         _isGrabbed = false;
         _grabHand = null;
+        _grabUsesXrInput = false;
 
         if (_rigidbody != null)
         {
@@ -210,6 +280,227 @@ public class HammerHandTrackingGrab : MonoBehaviour
     private bool HasUsableHand(OVRHand hand)
     {
         return hand != null && hand.isActiveAndEnabled && hand.IsTracked && hand.IsDataValid;
+    }
+
+    private bool TryGetFallbackHandSample(
+        OVRPlugin.Hand handType,
+        out Vector3 position,
+        out Quaternion rotation,
+        out float select,
+        out float grip,
+        out string source)
+    {
+        if (TryGetXrHandSample(handType, out position, out rotation, out select, out grip, out source))
+        {
+            return true;
+        }
+
+        if (TryGetOvrPluginHandSample(handType, out position, out rotation, out select, out grip, out source))
+        {
+            return true;
+        }
+
+        position = default;
+        rotation = default;
+        select = 0f;
+        grip = 0f;
+        source = $"fallback-none:{GetHandLabel(handType)}";
+        return false;
+    }
+
+    private bool TryGetXrHandSample(
+        OVRPlugin.Hand handType,
+        out Vector3 position,
+        out Quaternion rotation,
+        out float select,
+        out float grip,
+        out string source)
+    {
+        InputDevice device = GetXrHandDevice(handType);
+        select = 0f;
+        grip = 0f;
+        source = "xr-none";
+
+        if (!device.isValid)
+        {
+            position = default;
+            rotation = default;
+            source = $"xr-no-device:{GetHandLabel(handType)}";
+            return false;
+        }
+
+        bool hasPosition = device.TryGetFeatureValue(CommonUsages.devicePosition, out position);
+        bool hasRotation = device.TryGetFeatureValue(CommonUsages.deviceRotation, out rotation);
+
+        select = ReadXrFloatFeature(device, CommonUsages.trigger, "select", "pinch", "index");
+        grip = ReadXrFloatFeature(device, CommonUsages.grip, "grip", "squeeze", "select");
+
+        if (!hasPosition || !hasRotation)
+        {
+            source = $"xr-no-pose:{device.name}";
+            return false;
+        }
+
+        source = $"xr:{device.name}";
+        return true;
+    }
+
+    private bool TryGetOvrPluginHandSample(
+        OVRPlugin.Hand handType,
+        out Vector3 position,
+        out Quaternion rotation,
+        out float select,
+        out float grip,
+        out string source)
+    {
+        OVRPlugin.HandState handState = default;
+        position = default;
+        rotation = default;
+        select = 0f;
+        grip = 0f;
+        source = $"ovrp-none:{GetHandLabel(handType)}";
+
+        if (!OVRPlugin.GetHandState(OVRPlugin.Step.Render, handType, ref handState))
+        {
+            return false;
+        }
+
+        bool tracked = (handState.Status & OVRPlugin.HandStatus.HandTracked) != 0;
+        bool inputValid = (handState.Status & OVRPlugin.HandStatus.InputStateValid) != 0;
+        if (!tracked && !inputValid)
+        {
+            source = $"ovrp-not-tracked:{GetHandLabel(handType)}";
+            return false;
+        }
+
+        Vector3 localPosition = handState.RootPose.Position.FromFlippedZVector3f();
+        Quaternion localRotation = handState.RootPose.Orientation.FromFlippedZQuatf();
+        Transform trackingSpace = cameraRig != null ? cameraRig.trackingSpace : null;
+        if (trackingSpace != null)
+        {
+            position = trackingSpace.TransformPoint(localPosition);
+            rotation = trackingSpace.rotation * localRotation;
+        }
+        else
+        {
+            position = localPosition;
+            rotation = localRotation;
+        }
+
+        if (handState.PinchStrength != null)
+        {
+            int index = (int)OVRHand.HandFinger.Index;
+            int middle = (int)OVRHand.HandFinger.Middle;
+            int ring = (int)OVRHand.HandFinger.Ring;
+            int pinky = (int)OVRHand.HandFinger.Pinky;
+            if (index < handState.PinchStrength.Length)
+            {
+                select = handState.PinchStrength[index];
+            }
+
+            float closedTotal = 0f;
+            int closedCount = 0;
+            if (middle < handState.PinchStrength.Length) { closedTotal += handState.PinchStrength[middle]; closedCount++; }
+            if (ring < handState.PinchStrength.Length) { closedTotal += handState.PinchStrength[ring]; closedCount++; }
+            if (pinky < handState.PinchStrength.Length) { closedTotal += handState.PinchStrength[pinky]; closedCount++; }
+            grip = closedCount > 0 ? closedTotal / closedCount : 0f;
+        }
+
+        source = $"ovrp-root:{GetHandLabel(handType)}";
+        return true;
+    }
+
+    private InputDevice GetXrHandDevice(OVRPlugin.Hand handType)
+    {
+        InputDeviceCharacteristics handedness = handType == OVRPlugin.Hand.HandLeft
+            ? InputDeviceCharacteristics.Left
+            : InputDeviceCharacteristics.Right;
+
+        InputDeviceCharacteristics characteristics = InputDeviceCharacteristics.HandTracking | handedness;
+        _xrHandDevices.Clear();
+        InputDevices.GetDevicesWithCharacteristics(characteristics, _xrHandDevices);
+
+        foreach (InputDevice device in _xrHandDevices)
+        {
+            if (device.isValid)
+            {
+                return device;
+            }
+        }
+
+        _xrHandDevices.Clear();
+        InputDevices.GetDevices(_xrHandDevices);
+        foreach (InputDevice device in _xrHandDevices)
+        {
+            if (!device.isValid)
+            {
+                continue;
+            }
+
+            bool isCorrectHand = (device.characteristics & handedness) == handedness;
+            if (isCorrectHand && LooksLikeHandTrackingDevice(device))
+            {
+                return device;
+            }
+        }
+
+        return default;
+    }
+
+    private bool LooksLikeHandTrackingDevice(InputDevice device)
+    {
+        if ((device.characteristics & InputDeviceCharacteristics.HandTracking) == InputDeviceCharacteristics.HandTracking)
+        {
+            return true;
+        }
+
+        string deviceName = device.name.ToLowerInvariant();
+        return deviceName.Contains("hand") || deviceName.Contains("pinch") || deviceName.Contains("aim");
+    }
+
+    private float ReadXrFloatFeature(InputDevice device, InputFeatureUsage<float> preferredUsage, params string[] fallbackNameParts)
+    {
+        if (device.TryGetFeatureValue(preferredUsage, out float value))
+        {
+            return value;
+        }
+
+        _xrFeatureUsages.Clear();
+        if (!device.TryGetFeatureUsages(_xrFeatureUsages))
+        {
+            return 0f;
+        }
+
+        foreach (InputFeatureUsage usage in _xrFeatureUsages)
+        {
+            if (usage.type != typeof(float))
+            {
+                continue;
+            }
+
+            string usageName = usage.name.ToLowerInvariant();
+            bool nameMatches = false;
+            foreach (string namePart in fallbackNameParts)
+            {
+                if (usageName.Contains(namePart))
+                {
+                    nameMatches = true;
+                    break;
+                }
+            }
+
+            if (!nameMatches)
+            {
+                continue;
+            }
+
+            if (device.TryGetFeatureValue(new InputFeatureUsage<float>(usage.name), out value))
+            {
+                return value;
+            }
+        }
+
+        return 0f;
     }
 
     private bool TryGetHandPose(
@@ -497,6 +788,32 @@ public class HammerHandTrackingGrab : MonoBehaviour
         }
     }
 
+    private void SetXrHandDebug(
+        OVRPlugin.Hand handType,
+        string source,
+        bool hasPose,
+        bool gestureActive,
+        float select,
+        float grip,
+        float distance,
+        bool inRange)
+    {
+        string label = GetHandLabel(handType);
+        string message =
+            $"{label}: {source} tracked={hasPose} pose={hasPose}:xr " +
+            $"gesture={gestureActive} select={select:F2} grip={grip:F2} " +
+            $"colliderDist={(distance >= 0f ? distance.ToString("F2") : "--")} inRange={inRange}";
+
+        if (handType == OVRPlugin.Hand.HandLeft)
+        {
+            _leftDebug = message;
+        }
+        else
+        {
+            _rightDebug = message;
+        }
+    }
+
     private string GetHandLabel(OVRHand hand)
     {
         if (hand == null)
@@ -505,5 +822,10 @@ public class HammerHandTrackingGrab : MonoBehaviour
         }
 
         return hand.GetHand() == OVRPlugin.Hand.HandLeft ? "L" : "R";
+    }
+
+    private string GetHandLabel(OVRPlugin.Hand handType)
+    {
+        return handType == OVRPlugin.Hand.HandLeft ? "L" : "R";
     }
 }
