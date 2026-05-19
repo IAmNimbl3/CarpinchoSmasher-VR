@@ -243,18 +243,18 @@ public class CarpinchoSpawner : MonoBehaviour
             return;
         }
 
-        Transform point = PickSpawnPoint(type);
+        SpawnPoint point = PickSpawnPoint(type);
         if (point == null)
         {
             return;
         }
 
-        Enemy enemy = pool.Get(point.position, point.rotation);
+        Enemy enemy = pool.Get(point.GetRandomPosition(), point.transform.rotation);
         _aliveEnemies.Add(enemy);
         EnemySpawned?.Invoke(enemy);
     }
 
-    private Transform PickSpawnPoint(CarpinchoType type)
+    private SpawnPoint PickSpawnPoint(CarpinchoType type)
     {
         if (spawnPoints == null || spawnPoints.Length == 0)
         {
@@ -276,7 +276,7 @@ public class CarpinchoSpawner : MonoBehaviour
             return null;
         }
 
-        return _spawnPointBuffer[Random.Range(0, _spawnPointBuffer.Count)].transform;
+        return _spawnPointBuffer[Random.Range(0, _spawnPointBuffer.Count)];
     }
 
     private void BuildPools()
