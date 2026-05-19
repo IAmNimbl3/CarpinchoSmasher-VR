@@ -114,8 +114,8 @@ public class CarpinchoSniper : Enemy
             return;
         }
 
-        float distance = Vector3.Distance(transform.position, playerPos);
-        bool inRange = distance >= minRange && distance <= maxRange;
+        float sqr = (transform.position - playerPos).sqrMagnitude;
+        bool inRange = sqr >= minRange * minRange && sqr <= maxRange * maxRange;
         if (inRange && HasLineOfSight(playerPos))
         {
             EnterAiming();

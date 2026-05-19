@@ -2,12 +2,21 @@ using UnityEngine;
 
 public static class PlayerTarget
 {
+    private static Transform _cached;
+
     public static Transform Transform
     {
         get
         {
-            Camera cam = Camera.main;
-            return cam != null ? cam.transform : null;
+            if (_cached == null)
+            {
+                Camera cam = Camera.main;
+                if (cam != null)
+                {
+                    _cached = cam.transform;
+                }
+            }
+            return _cached;
         }
     }
 
