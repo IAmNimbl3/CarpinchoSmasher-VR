@@ -14,7 +14,7 @@ public class CarpinchoVelocista : Enemy
     }
 
     [Header("Velocista · Chase")]
-    [SerializeField, Min(1f)] private float chaseSpeed = 4f;
+    [SerializeField, Min(1f)] private float chaseSpeed = 1f;
     [SerializeField, Min(0.1f)] private float repathInterval = 0.2f;
     [Tooltip("Distancia al jugador a la que arranca el telegraph del ataque.")]
     [SerializeField, Min(0.3f)] private float meleeRange = 1.5f;
