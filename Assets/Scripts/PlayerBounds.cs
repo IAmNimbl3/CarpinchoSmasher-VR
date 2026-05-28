@@ -16,7 +16,8 @@ public class PlayerBounds : MonoBehaviour
 
         Vector3 p = transform.position;
         bool fell = p.y < minY;
-        bool outOfBounds = new Vector2(p.x, p.z).magnitude > maxHorizontalDistance;
+        Vector2 horizontalOffset = new Vector2(p.x - spawnPosition.x, p.z - spawnPosition.z);
+        bool outOfBounds = horizontalOffset.magnitude > maxHorizontalDistance;
         if (fell || outOfBounds)
         {
             transform.position = spawnPosition;

@@ -56129,7 +56129,7 @@ MonoBehaviour:
   optionsButton: {fileID: 403092531}
   exitButton: {fileID: 1780372425}
   menuRoot: {fileID: 794387684}
-  gameplaySceneName: SampleScene
+  gameplaySceneName: SceneMapaVR
 --- !u!114 &1253032445
 MonoBehaviour:
   m_ObjectHideFlags: 0

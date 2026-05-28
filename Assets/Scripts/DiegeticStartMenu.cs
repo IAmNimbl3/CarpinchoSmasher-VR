@@ -8,7 +8,7 @@ public class DiegeticStartMenu : MonoBehaviour
     [SerializeField] private Button optionsButton;
     [SerializeField] private Button exitButton;
     [SerializeField] private GameObject menuRoot;
-    [SerializeField] private string gameplaySceneName = "SampleScene";
+    [SerializeField] private string gameplaySceneName = "SceneMapaVR";
 
     public bool HasStarted { get; private set; }
 
