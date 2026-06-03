@@ -1,22 +1,16 @@
-using System.Collections;
 using UnityEngine;
 
 public class ThrownHammer : MonoBehaviour
 {
-    [Header("Aparición")]
-    [Tooltip("Duración del scale-in al spawnear.")]
-    [SerializeField, Min(0.01f)] private float appearDuration = 0.25f;
-
-    [Header("Vuelo")]
-    [Tooltip("Velocidad angular del tumble (rad/s) alrededor del eje perpendicular a la dirección del throw.")]
+    [Header("Flight")]
     [SerializeField, Min(0.1f)] private float tumbleSpeed = 14f;
-    [Tooltip("Tiempo máximo en vuelo antes de auto-destruirse (si no pegó nada).")]
     [SerializeField, Min(0.5f)] private float lifetime = 5f;
 
     private Rigidbody _rigidbody;
     private Collider[] _colliders;
+    private bool[] _originalTriggerStates;
     private Vector3 _originalScale;
-    private Vector3 _tumbleAxis;
+    private Vector3 _tumbleAxis = Vector3.right;
     private bool _isThrown;
     private float _flightTimer;
 
@@ -24,65 +18,57 @@ public class ThrownHammer : MonoBehaviour
     {
         _rigidbody = GetComponent<Rigidbody>();
         _colliders = GetComponentsInChildren<Collider>(true);
+        _originalTriggerStates = new bool[_colliders.Length];
         _originalScale = transform.localScale;
+
+        for (int i = 0; i < _colliders.Length; i++)
+        {
+            _originalTriggerStates[i] = _colliders[i] != null && _colliders[i].isTrigger;
+        }
     }
 
-    public void BeginSummon()
+    public void BeginHolstered()
     {
-        if (_rigidbody != null)
-        {
-            _rigidbody.isKinematic = true;
-            _rigidbody.useGravity = false;
-            _rigidbody.linearVelocity = Vector3.zero;
-            _rigidbody.angularVelocity = Vector3.zero;
-        }
-
-        SetCollidersEnabled(false);
-        StopAllCoroutines();
-        StartCoroutine(AppearRoutine());
-    }
-
-    private IEnumerator AppearRoutine()
-    {
-        transform.localScale = Vector3.zero;
-        float t = 0f;
-        while (t < appearDuration)
-        {
-            t += Time.deltaTime;
-            float p = Mathf.SmoothStep(0f, 1f, t / appearDuration);
-            transform.localScale = _originalScale * p;
-            yield return null;
-        }
+        _isThrown = false;
+        _flightTimer = 0f;
+        transform.SetParent(null, true);
         transform.localScale = _originalScale;
-        SetCollidersEnabled(true);
+        ConfigureRigidbody(isKinematic: true, useGravity: false, Vector3.zero, Vector3.zero);
+        SetColliders(enabled: true, forceTrigger: true);
+    }
+
+    public void BeginHeld()
+    {
+        _isThrown = false;
+        _flightTimer = 0f;
+        transform.localScale = _originalScale;
+        ConfigureRigidbody(isKinematic: true, useGravity: false, Vector3.zero, Vector3.zero);
+        SetColliders(enabled: false, forceTrigger: true);
     }
 
     public void Throw(Vector3 velocity)
     {
         _isThrown = true;
-        StopAllCoroutines();
-        transform.localScale = _originalScale;
+        _flightTimer = lifetime;
         transform.SetParent(null, true);
+        transform.localScale = _originalScale;
 
-        if (_rigidbody != null)
+        Vector3 horizontalDirection = new Vector3(velocity.x, 0f, velocity.z);
+        if (horizontalDirection.sqrMagnitude < 0.0001f)
         {
-            _rigidbody.isKinematic = false;
-            _rigidbody.useGravity = true;
-            _rigidbody.linearVelocity = velocity;
-
-            Vector3 horizontalDir = new Vector3(velocity.x, 0f, velocity.z);
-            if (horizontalDir.sqrMagnitude < 0.0001f)
-            {
-                horizontalDir = transform.forward;
-                horizontalDir.y = 0f;
-            }
-            horizontalDir.Normalize();
-            _tumbleAxis = Vector3.Cross(Vector3.up, horizontalDir).normalized;
-            _rigidbody.angularVelocity = _tumbleAxis * tumbleSpeed;
+            horizontalDirection = transform.forward;
+            horizontalDirection.y = 0f;
         }
 
-        SetCollidersEnabled(true);
-        _flightTimer = lifetime;
+        horizontalDirection.Normalize();
+        _tumbleAxis = Vector3.Cross(Vector3.up, horizontalDirection).normalized;
+        if (_tumbleAxis.sqrMagnitude < 0.0001f)
+        {
+            _tumbleAxis = transform.right;
+        }
+
+        SetColliders(enabled: true, forceTrigger: false);
+        ConfigureRigidbody(isKinematic: false, useGravity: true, velocity, _tumbleAxis * tumbleSpeed);
     }
 
     private void FixedUpdate()
@@ -109,18 +95,35 @@ public class ThrownHammer : MonoBehaviour
         }
     }
 
-    private void SetCollidersEnabled(bool enabled)
+    private void ConfigureRigidbody(bool isKinematic, bool useGravity, Vector3 linearVelocity, Vector3 angularVelocity)
     {
-        if (_colliders == null)
+        if (_rigidbody == null)
         {
             return;
         }
+
+        _rigidbody.isKinematic = isKinematic;
+        _rigidbody.useGravity = useGravity;
+        _rigidbody.linearVelocity = linearVelocity;
+        _rigidbody.angularVelocity = angularVelocity;
+        _rigidbody.collisionDetectionMode = isKinematic
+            ? CollisionDetectionMode.ContinuousSpeculative
+            : CollisionDetectionMode.ContinuousDynamic;
+        _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+    }
+
+    private void SetColliders(bool enabled, bool forceTrigger)
+    {
         for (int i = 0; i < _colliders.Length; i++)
         {
-            if (_colliders[i] != null)
+            Collider hammerCollider = _colliders[i];
+            if (hammerCollider == null)
             {
-                _colliders[i].enabled = enabled;
+                continue;
             }
+
+            hammerCollider.enabled = enabled;
+            hammerCollider.isTrigger = forceTrigger || _originalTriggerStates[i];
         }
     }
 }

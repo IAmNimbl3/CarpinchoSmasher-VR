@@ -21311,7 +21311,6 @@ GameObject:
   - component: {fileID: 1213946488}
   - component: {fileID: 1213946487}
   - component: {fileID: 1213946486}
-  - component: {fileID: 1213946485}
   m_Layer: 0
   m_Name: LeftHand_UI
   m_TagString: Untagged
@@ -21319,42 +21318,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1213946485
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1213946484}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5a6f9e66bf04a74683caa5840407f4e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LeftHandDiegeticUI
-  health: 100
-  coins: 20
-  cameraRig: {fileID: 1429269525}
-  trackedHand: 0
-  activationMode: 2
-  leftHandAnchor: {fileID: 942624594}
-  leftControllerAnchor: {fileID: 808051831}
-  rightHandAnchor: {fileID: 491957122}
-  rightControllerAnchor: {fileID: 589933273}
-  centerEyeAnchor: {fileID: 1599349235}
-  leftHand: {fileID: 1143752910}
-  rightHand: {fileID: 396506663}
-  leftSkeleton: {fileID: 1143752909}
-  rightSkeleton: {fileID: 396506662}
-  canvasGroup: {fileID: 1213946486}
-  healthText: {fileID: 880737338}
-  coinsText: {fileID: 1398146459}
-  panelOffset: {x: 0.08, y: 0.18, z: 0.22}
-  raisedHeightFromHead: -0.25
-  fistFingerStrengthThreshold: 0.72
-  fistTipToPalmRatio: 1.7
-  requiredClosedFingers: 4
-  controllerGripCountsAsFist: 1
-  fadeSpeed: 10
 --- !u!225 &1213946486
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -24828,7 +24791,6 @@ GameObject:
   - component: {fileID: 1429269524}
   - component: {fileID: 1429269523}
   - component: {fileID: 1429269528}
-  - component: {fileID: 1429269529}
   m_Layer: 0
   m_Name: '[BuildingBlock] Camera Rig'
   m_TagString: Untagged
@@ -24943,7 +24905,7 @@ MonoBehaviour:
   LateControllerUpdate: 1
   LateLatching: 0
   controllerDrivenHandPosesType: 1
-  SimultaneousHandsAndControllersEnabled: 1
+  SimultaneousHandsAndControllersEnabled: 0
   _readOnlyWideMotionModeHandPosesEnabled: 0
   wideMotionModeHandPosesEnabled: 0
   dynamicResolutionVersion: 1
@@ -25013,21 +24975,6 @@ MonoBehaviour:
   maxHorizontalDistance: 9.5
   spawnPosition: {x: 0, y: 0, z: -0.411}
   checkInterval: 0.25
---- !u!114 &1429269529
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1429269522}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ddab9256e2385314d92da36d13976056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MetaHandTrackingWarmup
-  warmupDuration: 3
-  retryInterval: 0.25
-  logWarmup: 0
 --- !u!1 &1429354147
 GameObject:
   m_ObjectHideFlags: 0
@@ -37740,12 +37687,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47b1ab84e736ff0408aefba965c4a4d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HammerSummoner
-  handAnchor: {fileID: 491957122}
-  hammerPrefab: {fileID: 4527349563257950671, guid: 7eaa516df6eeed64f9f3e8b81509da9d, type: 3}
+  cameraRig: {fileID: 0}
   controller: 2
-  holdLocalPosition: {x: 0, y: 0, z: 0.24}
-  holdLocalEulerAngles: {x: 90, y: 0, z: 0}
-  cooldown: 1.5
+  gripPressThreshold: 0.55
+  hammerPrefab: {fileID: 4527349563257950671, guid: 7eaa516df6eeed64f9f3e8b81509da9d, type: 3}
+  gripAnchorName: GripAnchor
+  heldLocalEulerAngles: {x: 0, y: 0, z: 0}
+  useHeadHeightForHolster: 1
+  holsterOffsetFromPlayer: {x: 0.12, y: -0.72, z: 0.02}
+  holsterEulerAngles: {x: 90, y: 0, z: 0}
+  pickupRadius: 0.5
+  respawnDelay: 2
   maxThrowSpeed: 15
   minThrowSpeed: 0.5
 --- !u!4 &2047782944

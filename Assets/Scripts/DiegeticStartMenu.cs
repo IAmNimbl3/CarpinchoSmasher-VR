@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -11,6 +12,14 @@ public class DiegeticStartMenu : MonoBehaviour
     [SerializeField] private string gameplaySceneName = "SceneMapaVR";
 
     public bool HasStarted { get; private set; }
+
+    private void Update()
+    {
+        if (OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.RTouch))
+        {
+            ClickSelectedOrStart();
+        }
+    }
 
     private void Awake()
     {
@@ -60,6 +69,21 @@ public class DiegeticStartMenu : MonoBehaviour
         }
 
         SceneManager.LoadScene(gameplaySceneName);
+    }
+
+    private void ClickSelectedOrStart()
+    {
+        GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        if (selected != null && selected.TryGetComponent(out Button selectedButton) && selectedButton.interactable)
+        {
+            selectedButton.onClick.Invoke();
+            return;
+        }
+
+        if (startButton != null && startButton.interactable)
+        {
+            startButton.onClick.Invoke();
+        }
     }
 
     public void ShowOptionsPlaceholder()

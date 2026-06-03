@@ -33853,7 +33853,6 @@ GameObject:
   - component: {fileID: 749082196}
   - component: {fileID: 749082195}
   - component: {fileID: 749082194}
-  - component: {fileID: 749082193}
   m_Layer: 0
   m_Name: '[BuildingBlock] Camera Rig'
   m_TagString: Untagged
@@ -33861,21 +33860,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &749082193
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 749082192}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ddab9256e2385314d92da36d13976056, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MetaHandTrackingWarmup
-  warmupDuration: 3
-  retryInterval: 0.25
-  logWarmup: 0
 --- !u!114 &749082194
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33999,7 +33983,7 @@ MonoBehaviour:
   LateControllerUpdate: 1
   LateLatching: 0
   controllerDrivenHandPosesType: 1
-  SimultaneousHandsAndControllersEnabled: 1
+  SimultaneousHandsAndControllersEnabled: 0
   _readOnlyWideMotionModeHandPosesEnabled: 0
   wideMotionModeHandPosesEnabled: 0
   dynamicResolutionVersion: 1
@@ -86465,7 +86449,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1910629477
 MonoBehaviour:
   m_ObjectHideFlags: 0
