@@ -47,7 +47,6 @@ public class CarpinchoVelocista : Enemy
     private float _stateTimer;
     private float _repathTimer;
     private Vector3 _lungeDirection;
-    private bool _hitDuringLunge;
     private MaterialPropertyBlock _propertyBlock;
 
     protected override void Awake()
@@ -143,7 +142,7 @@ public class CarpinchoVelocista : Enemy
             _repathTimer = repathInterval;
         }
 
-        float sqr = (transform.position - playerPos).sqrMagnitude;
+        float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
         if (sqr <= meleeRange * meleeRange)
         {
             EnterTelegraphing();
@@ -186,7 +185,6 @@ public class CarpinchoVelocista : Enemy
     {
         _state = State.Attacking;
         _stateTimer = lungeDuration;
-        _hitDuringLunge = false;
 
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
@@ -221,10 +219,9 @@ public class CarpinchoVelocista : Enemy
 
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
-            float sqr = (transform.position - playerPos).sqrMagnitude;
+            float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
             if (sqr <= hitRadius * hitRadius)
             {
-                _hitDuringLunge = true;
                 // TODO: enganchar con PlayerHealth (GDD §9 TBD).
                 Debug.Log($"[Velocista] Lunge impactó al jugador ({attackDamage}).", this);
                 EnterRecovering();

@@ -114,7 +114,7 @@ public class CarpinchoSniper : Enemy
             return;
         }
 
-        float sqr = (transform.position - playerPos).sqrMagnitude;
+        float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
         bool inRange = sqr >= minRange * minRange && sqr <= maxRange * maxRange;
         if (inRange && HasLineOfSight(playerPos))
         {
@@ -216,7 +216,7 @@ public class CarpinchoSniper : Enemy
                 ? Quaternion.LookRotation(direction)
                 : Quaternion.identity;
             Projectile p = Instantiate(projectilePrefab, origin, rotation);
-            p.Launch(origin, direction, this);
+            p.Launch(origin, direction);
         }
 
         _shotsFired++;
@@ -271,7 +271,7 @@ public class CarpinchoSniper : Enemy
             return true;
         }
 
-        Transform player = PlayerTarget.Transform;
-        return player != null && (hit.transform == player || hit.transform.IsChildOf(player));
+        Transform playerRoot = PlayerTarget.Root;
+        return playerRoot != null && hit.transform.IsChildOf(playerRoot);
     }
 }

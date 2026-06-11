@@ -19,7 +19,6 @@ public class Projectile : MonoBehaviour
     private Vector3 _direction;
     private float _elapsed;
     private bool _isDeflected;
-    private Enemy _originalShooter;
     private Rigidbody _rigidbody;
 
     private void Awake()
@@ -33,7 +32,7 @@ public class Projectile : MonoBehaviour
         }
     }
 
-    public void Launch(Vector3 origin, Vector3 direction, Enemy shooter)
+    public void Launch(Vector3 origin, Vector3 direction)
     {
         _direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
         Quaternion rotation = Quaternion.LookRotation(_direction);
@@ -47,35 +46,8 @@ public class Projectile : MonoBehaviour
 
         _elapsed = 0f;
         _isDeflected = false;
-        _originalShooter = shooter;
-
-        IgnoreShooterColliders(shooter);
 
         ApplyVelocity();
-    }
-
-    private void IgnoreShooterColliders(Enemy shooter)
-    {
-        if (shooter == null)
-        {
-            return;
-        }
-
-        Collider myCollider = GetComponent<Collider>();
-        if (myCollider == null)
-        {
-            return;
-        }
-
-        Collider[] shooterColliders = shooter.GetComponentsInChildren<Collider>(true);
-        for (int i = 0; i < shooterColliders.Length; i++)
-        {
-            Collider sc = shooterColliders[i];
-            if (sc != null)
-            {
-                Physics.IgnoreCollision(myCollider, sc, true);
-            }
-        }
     }
 
     private void Update()
@@ -120,7 +92,9 @@ public class Projectile : MonoBehaviour
         Enemy enemy = obj.GetComponentInParent<Enemy>();
         if (enemy != null)
         {
-            if (!_isDeflected && enemy == _originalShooter)
+            // Sin deflectar el proyectil atraviesa a los carpinchos (sin friendly fire).
+            // Repelido con el martillo, puede matar a cualquiera, incluido el tirador.
+            if (!_isDeflected)
             {
                 return;
             }

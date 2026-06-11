@@ -124,7 +124,7 @@ public class CarpinchoJuggernaut : Enemy
             return;
         }
 
-        float sqr = (transform.position - playerPos).sqrMagnitude;
+        float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
         if (sqr > damageDistance * damageDistance)
         {
             return;

@@ -69,17 +69,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c93ad287476fd4419188c282c7cfc0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 0
+  type: 2
   scoreValue: 10
   deathVfx: {fileID: 7744676672056235082, guid: ffc56d132993eba46b4827223f364ea0, type: 3}
   destroyWeaponOnHit: 1
-  chaseSpeed: 4
+  chaseSpeed: 1
   repathInterval: 0.2
-  meleeRange: 1.5
+  meleeRange: 2
   telegraphDuration: 0.5
   lungeDuration: 0.4
-  lungeSpeed: 6
-  hitRadius: 0.7
+  lungeSpeed: 2
+  hitRadius: 1
   attackDamage: 1
   vulnerableDuration: 1.2
   recoveryDuration: 0.5

@@ -67,10 +67,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 554dd58b1fcb4cd41923f3a4bb40d315, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 0
+  type: 1
   scoreValue: 10
   deathVfx: {fileID: 7744676672056235082, guid: ffc56d132993eba46b4827223f364ea0, type: 3}
-  destroyWeaponOnHit: 1
+  destroyWeaponOnHit: 0
   fallSpeed: 2
   horizontalSpeed: 1.5
   facePlayer: 1
@@ -78,7 +78,7 @@ MonoBehaviour:
   explodeAtHeight: 0.2
   explosionRadius: 2
   explosionDamage: 1
-  explosionVfx: {fileID: 0}
+  explosionVfx: {fileID: 7744676672056235082, guid: ffc56d132993eba46b4827223f364ea0, type: 3}
 --- !u!1001 &1320193733422839004
 PrefabInstance:
   m_ObjectHideFlags: 0

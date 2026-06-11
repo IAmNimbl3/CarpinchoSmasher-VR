@@ -20,6 +20,15 @@ public static class PlayerTarget
         }
     }
 
+    public static Transform Root
+    {
+        get
+        {
+            Transform t = Transform;
+            return t != null ? t.root : null;
+        }
+    }
+
     public static Vector3 Position
     {
         get
@@ -27,6 +36,13 @@ public static class PlayerTarget
             Transform t = Transform;
             return t != null ? t.position : Vector3.zero;
         }
+    }
+
+    public static float HorizontalSqrDistance(Vector3 from, Vector3 playerPos)
+    {
+        float dx = from.x - playerPos.x;
+        float dz = from.z - playerPos.z;
+        return dx * dx + dz * dz;
     }
 
     public static bool TryGetPosition(out Vector3 position)
