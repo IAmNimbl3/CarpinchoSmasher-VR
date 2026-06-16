@@ -68,6 +68,13 @@ public class Enemy : MonoBehaviour
             return;
         }
 
+        HammerDamageDealer hammerDamageDealer = collision.gameObject.GetComponentInParent<HammerDamageDealer>();
+        if (hammerDamageDealer != null)
+        {
+            hammerDamageDealer.TryDamage(this);
+            return;
+        }
+
         if (destroyWeaponOnHit)
         {
             Destroy(collision.gameObject);

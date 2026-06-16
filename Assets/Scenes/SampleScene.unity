@@ -37688,18 +37688,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HammerSummoner
   cameraRig: {fileID: 0}
-  controller: 2
-  gripPressThreshold: 0.55
   hammerPrefab: {fileID: 4527349563257950671, guid: 7eaa516df6eeed64f9f3e8b81509da9d, type: 3}
-  gripAnchorName: GripAnchor
-  heldLocalEulerAngles: {x: 0, y: 0, z: 0}
   useHeadHeightForHolster: 1
   holsterOffsetFromPlayer: {x: 0.12, y: -0.72, z: 0.02}
   holsterEulerAngles: {x: 90, y: 0, z: 0}
-  pickupRadius: 0.5
-  respawnDelay: 2
-  maxThrowSpeed: 15
-  minThrowSpeed: 0.5
+  respawnDelayAfterThrow: 0
 --- !u!4 &2047782944
 Transform:
   m_ObjectHideFlags: 0

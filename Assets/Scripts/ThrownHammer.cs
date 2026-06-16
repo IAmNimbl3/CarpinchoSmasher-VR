@@ -1,101 +1,194 @@
+using System;
+using Oculus.Interaction;
 using UnityEngine;
 
 public class ThrownHammer : MonoBehaviour
 {
-    [Header("Flight")]
-    [SerializeField, Min(0.1f)] private float tumbleSpeed = 14f;
-    [SerializeField, Min(0.5f)] private float lifetime = 5f;
+    private enum HammerState
+    {
+        Holstered,
+        Held,
+        Launched
+    }
+
+    [Header("Lifetime")]
+    [SerializeField, Min(0.5f)] private float launchedLifetime = 3f;
+
+    [Header("Physics")]
+    [SerializeField] private bool useGravityWhenLaunched = true;
 
     private Rigidbody _rigidbody;
     private Collider[] _colliders;
     private bool[] _originalTriggerStates;
-    private Vector3 _originalScale;
-    private Vector3 _tumbleAxis = Vector3.right;
-    private bool _isThrown;
-    private float _flightTimer;
+    private Grabbable _grabbable;
+    private HammerDamageDealer _damageDealer;
+    private HammerState _state;
+    private float _launchedTimer;
+    private bool _wasSelected;
+
+    public event Action<ThrownHammer> Grabbed;
+    public event Action<ThrownHammer> Released;
 
     private void Awake()
     {
-        _rigidbody = GetComponent<Rigidbody>();
-        _colliders = GetComponentsInChildren<Collider>(true);
-        _originalTriggerStates = new bool[_colliders.Length];
-        _originalScale = transform.localScale;
+        CacheReferences();
+        ConfigureGrabbable();
+    }
 
-        for (int i = 0; i < _colliders.Length; i++)
+    private void OnEnable()
+    {
+        CacheReferences();
+
+        if (_grabbable != null)
         {
-            _originalTriggerStates[i] = _colliders[i] != null && _colliders[i].isTrigger;
+            _grabbable.WhenPointerEventRaised += HandlePointerEventRaised;
         }
     }
 
-    public void BeginHolstered()
+    private void OnDisable()
     {
-        _isThrown = false;
-        _flightTimer = 0f;
-        transform.SetParent(null, true);
-        transform.localScale = _originalScale;
-        ConfigureRigidbody(isKinematic: true, useGravity: false, Vector3.zero, Vector3.zero);
-        SetColliders(enabled: true, forceTrigger: true);
-    }
-
-    public void BeginHeld()
-    {
-        _isThrown = false;
-        _flightTimer = 0f;
-        transform.localScale = _originalScale;
-        ConfigureRigidbody(isKinematic: true, useGravity: false, Vector3.zero, Vector3.zero);
-        SetColliders(enabled: false, forceTrigger: true);
-    }
-
-    public void Throw(Vector3 velocity)
-    {
-        _isThrown = true;
-        _flightTimer = lifetime;
-        transform.SetParent(null, true);
-        transform.localScale = _originalScale;
-
-        Vector3 horizontalDirection = new Vector3(velocity.x, 0f, velocity.z);
-        if (horizontalDirection.sqrMagnitude < 0.0001f)
+        if (_grabbable != null)
         {
-            horizontalDirection = transform.forward;
-            horizontalDirection.y = 0f;
+            _grabbable.WhenPointerEventRaised -= HandlePointerEventRaised;
         }
-
-        horizontalDirection.Normalize();
-        _tumbleAxis = Vector3.Cross(Vector3.up, horizontalDirection).normalized;
-        if (_tumbleAxis.sqrMagnitude < 0.0001f)
-        {
-            _tumbleAxis = transform.right;
-        }
-
-        SetColliders(enabled: true, forceTrigger: false);
-        ConfigureRigidbody(isKinematic: false, useGravity: true, velocity, _tumbleAxis * tumbleSpeed);
-    }
-
-    private void FixedUpdate()
-    {
-        if (!_isThrown || _rigidbody == null)
-        {
-            return;
-        }
-
-        _rigidbody.angularVelocity = Vector3.Project(_rigidbody.angularVelocity, _tumbleAxis);
     }
 
     private void Update()
     {
-        if (!_isThrown)
+        if (_state != HammerState.Launched)
         {
             return;
         }
 
-        _flightTimer -= Time.deltaTime;
-        if (_flightTimer <= 0f)
+        _launchedTimer -= Time.deltaTime;
+        if (_launchedTimer <= 0f)
         {
             Destroy(gameObject);
         }
     }
 
-    private void ConfigureRigidbody(bool isKinematic, bool useGravity, Vector3 linearVelocity, Vector3 angularVelocity)
+    public void BeginHolstered()
+    {
+        _state = HammerState.Holstered;
+        _launchedTimer = 0f;
+        _wasSelected = false;
+
+        ConfigureRigidbody(isKinematic: true, useGravity: false);
+        SetColliders(enabled: true, forceTrigger: true);
+
+        if (_damageDealer != null)
+        {
+            _damageDealer.SetDamageEnabled(false);
+            _damageDealer.ResetHitCache();
+        }
+    }
+
+    private void BeginHeld()
+    {
+        if (_state == HammerState.Held)
+        {
+            return;
+        }
+
+        _state = HammerState.Held;
+        _launchedTimer = 0f;
+
+        ConfigureRigidbody(isKinematic: true, useGravity: false);
+        SetColliders(enabled: true, forceTrigger: true);
+
+        if (_damageDealer != null)
+        {
+            _damageDealer.SetDamageEnabled(true);
+            _damageDealer.ResetHitCache();
+        }
+
+        Grabbed?.Invoke(this);
+    }
+
+    private void BeginLaunched()
+    {
+        if (_state == HammerState.Launched)
+        {
+            return;
+        }
+
+        _state = HammerState.Launched;
+        _launchedTimer = launchedLifetime;
+
+        ConfigureRigidbody(isKinematic: false, useGravity: useGravityWhenLaunched);
+        SetColliders(enabled: true, forceTrigger: false);
+
+        if (_damageDealer != null)
+        {
+            _damageDealer.SetDamageEnabled(true);
+            _damageDealer.ResetHitCache();
+        }
+
+        Released?.Invoke(this);
+    }
+
+    private void HandlePointerEventRaised(PointerEvent evt)
+    {
+        bool isSelected = _grabbable != null && _grabbable.SelectingPointsCount > 0;
+
+        if (isSelected && !_wasSelected)
+        {
+            BeginHeld();
+        }
+        else if (!isSelected && _wasSelected)
+        {
+            BeginLaunched();
+        }
+
+        _wasSelected = isSelected;
+    }
+
+    private void CacheReferences()
+    {
+        if (_rigidbody == null)
+        {
+            _rigidbody = GetComponent<Rigidbody>();
+        }
+
+        if (_grabbable == null)
+        {
+            _grabbable = GetComponent<Grabbable>();
+        }
+
+        if (_damageDealer == null)
+        {
+            _damageDealer = GetComponent<HammerDamageDealer>();
+        }
+
+        if (_colliders == null || _colliders.Length == 0)
+        {
+            _colliders = GetComponentsInChildren<Collider>(true);
+            _originalTriggerStates = new bool[_colliders.Length];
+
+            for (int i = 0; i < _colliders.Length; i++)
+            {
+                _originalTriggerStates[i] = _colliders[i] != null && _colliders[i].isTrigger;
+            }
+        }
+    }
+
+    private void ConfigureGrabbable()
+    {
+        if (_grabbable == null)
+        {
+            return;
+        }
+
+        _grabbable.MaxGrabPoints = 1;
+        _grabbable.TransferOnSecondSelection = true;
+        _grabbable.ForceKinematicDisabled = true;
+        _grabbable.InjectOptionalTargetTransform(transform);
+        _grabbable.InjectOptionalRigidbody(_rigidbody);
+        _grabbable.InjectOptionalKinematicWhileSelected(true);
+        _grabbable.InjectOptionalThrowWhenUnselected(true);
+    }
+
+    private void ConfigureRigidbody(bool isKinematic, bool useGravity)
     {
         if (_rigidbody == null)
         {
@@ -104,16 +197,25 @@ public class ThrownHammer : MonoBehaviour
 
         _rigidbody.isKinematic = isKinematic;
         _rigidbody.useGravity = useGravity;
-        _rigidbody.linearVelocity = linearVelocity;
-        _rigidbody.angularVelocity = angularVelocity;
+        _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
         _rigidbody.collisionDetectionMode = isKinematic
             ? CollisionDetectionMode.ContinuousSpeculative
             : CollisionDetectionMode.ContinuousDynamic;
-        _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+
+        if (isKinematic)
+        {
+            _rigidbody.linearVelocity = Vector3.zero;
+            _rigidbody.angularVelocity = Vector3.zero;
+        }
     }
 
     private void SetColliders(bool enabled, bool forceTrigger)
     {
+        if (_colliders == null)
+        {
+            return;
+        }
+
         for (int i = 0; i < _colliders.Length; i++)
         {
             Collider hammerCollider = _colliders[i];
@@ -123,7 +225,7 @@ public class ThrownHammer : MonoBehaviour
             }
 
             hammerCollider.enabled = enabled;
-            hammerCollider.isTrigger = forceTrigger || _originalTriggerStates[i];
+            hammerCollider.isTrigger = forceTrigger || (_originalTriggerStates != null && _originalTriggerStates[i]);
         }
     }
 }
