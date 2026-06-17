@@ -16,14 +16,27 @@ public class ThrownHammer : MonoBehaviour
 
     [Header("Physics")]
     [SerializeField] private bool useGravityWhenLaunched = true;
+    [SerializeField, Min(0f)] private float launchedBounciness = 0.45f;
+    [SerializeField, Min(0f)] private float launchedDynamicFriction = 0.2f;
+    [SerializeField, Min(0f)] private float launchedStaticFriction = 0.2f;
+    [SerializeField, Min(0f)] private float minLaunchSpeed = 1.5f;
+    [SerializeField, Min(0f)] private float maxLaunchSpeed = 12f;
+    [SerializeField, Min(0f)] private float maxAngularSpeed = 25f;
+
+    [Header("Grab")]
+    [SerializeField] private Transform gripAnchor;
+    [SerializeField] private Collider[] nonGrabbableColliders;
+    [SerializeField] private bool disableNonGrabbableCollidersWhileHolstered = true;
 
     private Rigidbody _rigidbody;
     private Collider[] _colliders;
     private bool[] _originalTriggerStates;
     private Grabbable _grabbable;
     private HammerDamageDealer _damageDealer;
+    private PhysicsMaterial _launchedMaterial;
     private HammerState _state;
     private float _launchedTimer;
+    private int _launchVelocityTuneFrames;
     private bool _wasSelected;
 
     public event Action<ThrownHammer> Grabbed;
@@ -67,14 +80,29 @@ public class ThrownHammer : MonoBehaviour
         }
     }
 
+    private void FixedUpdate()
+    {
+        if (_state != HammerState.Launched || _launchVelocityTuneFrames <= 0)
+        {
+            return;
+        }
+
+        _launchVelocityTuneFrames--;
+        TuneLaunchVelocity();
+    }
+
     public void BeginHolstered()
     {
+        CacheReferences();
+
         _state = HammerState.Holstered;
         _launchedTimer = 0f;
+        _launchVelocityTuneFrames = 0;
         _wasSelected = false;
 
         ConfigureRigidbody(isKinematic: true, useGravity: false);
         SetColliders(enabled: true, forceTrigger: true);
+        SetNonGrabbableCollidersEnabled(false);
 
         if (_damageDealer != null)
         {
@@ -92,9 +120,11 @@ public class ThrownHammer : MonoBehaviour
 
         _state = HammerState.Held;
         _launchedTimer = 0f;
+        _launchVelocityTuneFrames = 0;
 
         ConfigureRigidbody(isKinematic: true, useGravity: false);
         SetColliders(enabled: true, forceTrigger: true);
+        SetNonGrabbableCollidersEnabled(true);
 
         if (_damageDealer != null)
         {
@@ -114,9 +144,12 @@ public class ThrownHammer : MonoBehaviour
 
         _state = HammerState.Launched;
         _launchedTimer = launchedLifetime;
+        _launchVelocityTuneFrames = 3;
 
         ConfigureRigidbody(isKinematic: false, useGravity: useGravityWhenLaunched);
         SetColliders(enabled: true, forceTrigger: false);
+        SetNonGrabbableCollidersEnabled(true);
+        ApplyLaunchedPhysicsMaterial();
 
         if (_damageDealer != null)
         {
@@ -158,6 +191,15 @@ public class ThrownHammer : MonoBehaviour
         if (_damageDealer == null)
         {
             _damageDealer = GetComponent<HammerDamageDealer>();
+        }
+
+        if (gripAnchor == null)
+        {
+            Transform foundGripAnchor = transform.Find("GripAnchor");
+            if (foundGripAnchor != null)
+            {
+                gripAnchor = foundGripAnchor;
+            }
         }
 
         if (_colliders == null || _colliders.Length == 0)
@@ -209,6 +251,65 @@ public class ThrownHammer : MonoBehaviour
         }
     }
 
+    private void TuneLaunchVelocity()
+    {
+        if (_rigidbody == null)
+        {
+            return;
+        }
+
+        Vector3 velocity = _rigidbody.linearVelocity;
+        float speed = velocity.magnitude;
+
+        if (maxLaunchSpeed > 0f && speed > maxLaunchSpeed)
+        {
+            _rigidbody.linearVelocity = velocity.normalized * maxLaunchSpeed;
+        }
+        else if (minLaunchSpeed > 0f && speed > 0.05f && speed < minLaunchSpeed)
+        {
+            _rigidbody.linearVelocity = velocity.normalized * minLaunchSpeed;
+        }
+
+        if (maxAngularSpeed > 0f)
+        {
+            _rigidbody.maxAngularVelocity = maxAngularSpeed;
+            Vector3 angularVelocity = _rigidbody.angularVelocity;
+            if (angularVelocity.magnitude > maxAngularSpeed)
+            {
+                _rigidbody.angularVelocity = angularVelocity.normalized * maxAngularSpeed;
+            }
+        }
+    }
+
+    private void ApplyLaunchedPhysicsMaterial()
+    {
+        if (_colliders == null)
+        {
+            return;
+        }
+
+        if (_launchedMaterial == null)
+        {
+            _launchedMaterial = new PhysicsMaterial("Runtime Hammer Launch Material")
+            {
+                bounceCombine = PhysicsMaterialCombine.Maximum,
+                frictionCombine = PhysicsMaterialCombine.Minimum
+            };
+        }
+
+        _launchedMaterial.bounciness = launchedBounciness;
+        _launchedMaterial.dynamicFriction = launchedDynamicFriction;
+        _launchedMaterial.staticFriction = launchedStaticFriction;
+
+        foreach (Collider hammerCollider in _colliders)
+        {
+            if (hammerCollider != null)
+            {
+                hammerCollider.sharedMaterial = _launchedMaterial;
+            }
+        }
+    }
+
     private void SetColliders(bool enabled, bool forceTrigger)
     {
         if (_colliders == null)
@@ -226,6 +327,22 @@ public class ThrownHammer : MonoBehaviour
 
             hammerCollider.enabled = enabled;
             hammerCollider.isTrigger = forceTrigger || (_originalTriggerStates != null && _originalTriggerStates[i]);
+        }
+    }
+
+    private void SetNonGrabbableCollidersEnabled(bool enabled)
+    {
+        if (!disableNonGrabbableCollidersWhileHolstered || nonGrabbableColliders == null)
+        {
+            return;
+        }
+
+        foreach (Collider nonGrabbableCollider in nonGrabbableColliders)
+        {
+            if (nonGrabbableCollider != null)
+            {
+                nonGrabbableCollider.enabled = enabled;
+            }
         }
     }
 }

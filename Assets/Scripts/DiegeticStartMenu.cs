@@ -8,8 +8,10 @@ public class DiegeticStartMenu : MonoBehaviour
     [SerializeField] private Button startButton;
     [SerializeField] private Button optionsButton;
     [SerializeField] private Button exitButton;
+    [SerializeField] private Text optionsButtonLabel;
     [SerializeField] private GameObject menuRoot;
     [SerializeField] private string gameplaySceneName = "SceneMapaVR";
+    [SerializeField] private VRTrackingOriginApplier trackingOriginApplier;
 
     public bool HasStarted { get; private set; }
 
@@ -24,6 +26,13 @@ public class DiegeticStartMenu : MonoBehaviour
     private void Awake()
     {
         menuRoot ??= gameObject;
+        trackingOriginApplier ??= FindAnyObjectByType<VRTrackingOriginApplier>();
+        if (optionsButtonLabel == null && optionsButton != null)
+        {
+            optionsButtonLabel = optionsButton.GetComponentInChildren<Text>(true);
+        }
+
+        ApplySeatedMode();
 
         if (startButton != null)
         {
@@ -88,11 +97,30 @@ public class DiegeticStartMenu : MonoBehaviour
 
     public void ShowOptionsPlaceholder()
     {
-        Debug.Log("[DiegeticStartMenu] Options button pressed. Placeholder only.");
+        VRPlayModeSettings.ToggleSeatedMode();
+        ApplySeatedMode();
+        Debug.Log("[DiegeticStartMenu] Play mode: " + (VRPlayModeSettings.SeatedMode ? "Seated" : "Standing"));
     }
 
     public void ExitPlaceholder()
     {
         Debug.Log("[DiegeticStartMenu] Exit button pressed. Placeholder only.");
+    }
+
+    private void ApplySeatedMode()
+    {
+        if (trackingOriginApplier != null)
+        {
+            trackingOriginApplier.Apply();
+        }
+
+        if (optionsButtonLabel != null)
+        {
+            VRPlayModeConfig activeConfig = VRPlayModeSettings.ActiveConfig;
+            string modeName = activeConfig != null
+                ? activeConfig.DisplayName
+                : (VRPlayModeSettings.SeatedMode ? "Sentado" : "Parado");
+            optionsButtonLabel.text = "Modo: " + modeName;
+        }
     }
 }

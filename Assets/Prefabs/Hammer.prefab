@@ -20,7 +20,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2858757120605030596
 Transform:
   m_ObjectHideFlags: 0
@@ -93,7 +93,7 @@ MonoBehaviour:
   _data: {fileID: 0}
   _pointableElement: {fileID: 3873126128900222377}
   _rigidbody: {fileID: 8240823292147749917}
-  _grabSource: {fileID: 0}
+  _grabSource: {fileID: 8738753820226401681}
   _resetGrabOnGrabsUpdated: 1
   _physicsGrabbable: {fileID: 0}
   _movementProvider: {fileID: 1810878973820341665}
@@ -256,7 +256,7 @@ MonoBehaviour:
   _data: {fileID: 0}
   _pointableElement: {fileID: 3873126128900222377}
   _rigidbody: {fileID: 8240823292147749917}
-  _grabSource: {fileID: 0}
+  _grabSource: {fileID: 8738753820226401681}
   _useClosestPointAsGrabSource: 0
   _releaseDistance: 0
   _resetGrabOnGrabsUpdated: 1
@@ -490,6 +490,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ThrownHammer
   launchedLifetime: 3
   useGravityWhenLaunched: 1
+  launchedBounciness: 0.45
+  launchedDynamicFriction: 0.15
+  launchedStaticFriction: 0.15
+  minLaunchSpeed: 1.5
+  maxLaunchSpeed: 13
+  maxAngularSpeed: 28
+  gripAnchor: {fileID: 8738753820226401681}
+  nonGrabbableColliders:
+  - {fileID: 4744274453852005345}
+  disableNonGrabbableCollidersWhileHolstered: 1
 --- !u!114 &3873126128900222377
 MonoBehaviour:
   m_ObjectHideFlags: 0
