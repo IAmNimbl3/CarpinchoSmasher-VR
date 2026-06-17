@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using Oculus.Interaction;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class ThrownHammer : MonoBehaviour
 {
@@ -28,9 +30,19 @@ public class ThrownHammer : MonoBehaviour
     [SerializeField] private Collider[] nonGrabbableColliders;
     [SerializeField] private bool disableNonGrabbableCollidersWhileHolstered = true;
 
+    [Header("Holstered Assist")]
+    [SerializeField] private bool snapGripToNearestControllerOnGrab = true;
+    [SerializeField, Min(0f)] private float snapActivationDistance = 0.16f;
+    [SerializeField, Min(0f)] private float holsteredGripColliderPadding = 0.07f;
+    [SerializeField] private bool showGripAreaHighlight = true;
+    [SerializeField, Min(0f)] private float highlightActivationDistance = 0.06f;
+    [SerializeField, Min(1f)] private float gripHighlightMeshScale = 1.035f;
+    [SerializeField] private Color gripHighlightColor = new Color(1f, 0.82f, 0.15f, 0.32f);
+
     private Rigidbody _rigidbody;
     private Collider[] _colliders;
     private bool[] _originalTriggerStates;
+    private Vector3[] _originalBoxColliderSizes;
     private Grabbable _grabbable;
     private HammerDamageDealer _damageDealer;
     private PhysicsMaterial _launchedMaterial;
@@ -38,6 +50,13 @@ public class ThrownHammer : MonoBehaviour
     private float _launchedTimer;
     private int _launchVelocityTuneFrames;
     private bool _wasSelected;
+    private OVRCameraRig _cameraRig;
+    private Transform _leftControllerAnchor;
+    private Transform _rightControllerAnchor;
+    private readonly List<GameObject> _gripHighlights = new();
+    private Material _gripHighlightMaterial;
+    private bool _gripHighlightsVisible;
+    private bool _holsteredGripAreaInflated;
 
     public event Action<ThrownHammer> Grabbed;
     public event Action<ThrownHammer> Released;
@@ -68,6 +87,8 @@ public class ThrownHammer : MonoBehaviour
 
     private void Update()
     {
+        UpdateGripAreaHighlight();
+
         if (_state != HammerState.Launched)
         {
             return;
@@ -103,6 +124,7 @@ public class ThrownHammer : MonoBehaviour
         ConfigureRigidbody(isKinematic: true, useGravity: false);
         SetColliders(enabled: true, forceTrigger: true);
         SetNonGrabbableCollidersEnabled(false);
+        SetHolsteredGripAreaInflated(true);
 
         if (_damageDealer != null)
         {
@@ -118,11 +140,18 @@ public class ThrownHammer : MonoBehaviour
             return;
         }
 
+        if (_state == HammerState.Holstered && snapGripToNearestControllerOnGrab)
+        {
+            SnapGripAnchorToNearestController();
+        }
+
         _state = HammerState.Held;
         _launchedTimer = 0f;
         _launchVelocityTuneFrames = 0;
+        SetGripHighlightsVisible(false);
 
         ConfigureRigidbody(isKinematic: true, useGravity: false);
+        SetHolsteredGripAreaInflated(false);
         SetColliders(enabled: true, forceTrigger: true);
         SetNonGrabbableCollidersEnabled(true);
 
@@ -145,8 +174,10 @@ public class ThrownHammer : MonoBehaviour
         _state = HammerState.Launched;
         _launchedTimer = launchedLifetime;
         _launchVelocityTuneFrames = 3;
+        SetGripHighlightsVisible(false);
 
         ConfigureRigidbody(isKinematic: false, useGravity: useGravityWhenLaunched);
+        SetHolsteredGripAreaInflated(false);
         SetColliders(enabled: true, forceTrigger: false);
         SetNonGrabbableCollidersEnabled(true);
         ApplyLaunchedPhysicsMaterial();
@@ -206,12 +237,20 @@ public class ThrownHammer : MonoBehaviour
         {
             _colliders = GetComponentsInChildren<Collider>(true);
             _originalTriggerStates = new bool[_colliders.Length];
+            _originalBoxColliderSizes = new Vector3[_colliders.Length];
 
             for (int i = 0; i < _colliders.Length; i++)
             {
                 _originalTriggerStates[i] = _colliders[i] != null && _colliders[i].isTrigger;
+                if (_colliders[i] is BoxCollider boxCollider)
+                {
+                    _originalBoxColliderSizes[i] = boxCollider.size;
+                }
             }
         }
+
+        ResolveControllerAnchors();
+        CreateGripHighlightsIfNeeded();
     }
 
     private void ConfigureGrabbable()
@@ -342,6 +381,262 @@ public class ThrownHammer : MonoBehaviour
             if (nonGrabbableCollider != null)
             {
                 nonGrabbableCollider.enabled = enabled;
+            }
+        }
+    }
+
+    private void SetHolsteredGripAreaInflated(bool inflated)
+    {
+        if (_holsteredGripAreaInflated == inflated || _colliders == null || _originalBoxColliderSizes == null)
+        {
+            return;
+        }
+
+        _holsteredGripAreaInflated = inflated;
+
+        for (int i = 0; i < _colliders.Length; i++)
+        {
+            if (_colliders[i] is not BoxCollider boxCollider || IsNonGrabbableCollider(boxCollider))
+            {
+                continue;
+            }
+
+            Vector3 size = _originalBoxColliderSizes[i];
+            if (inflated && holsteredGripColliderPadding > 0f)
+            {
+                Vector3 scale = boxCollider.transform.lossyScale;
+                float localPaddingX = holsteredGripColliderPadding / Mathf.Max(Mathf.Abs(scale.x), 0.0001f);
+                float localPaddingZ = holsteredGripColliderPadding / Mathf.Max(Mathf.Abs(scale.z), 0.0001f);
+                size.x += localPaddingX * 2f;
+                size.z += localPaddingZ * 2f;
+            }
+
+            boxCollider.size = size;
+        }
+    }
+
+    private void ResolveControllerAnchors()
+    {
+        if (_cameraRig == null)
+        {
+            _cameraRig = FindAnyObjectByType<OVRCameraRig>();
+        }
+
+        if (_cameraRig == null)
+        {
+            return;
+        }
+
+        _leftControllerAnchor = _cameraRig.leftHandAnchor;
+        _rightControllerAnchor = _cameraRig.rightHandAnchor;
+    }
+
+    private void SnapGripAnchorToNearestController()
+    {
+        if (gripAnchor == null || !TryGetClosestControllerToGrip(out Transform controllerAnchor, out _, snapActivationDistance))
+        {
+            return;
+        }
+
+        Quaternion rotationDelta = controllerAnchor.rotation * Quaternion.Inverse(gripAnchor.rotation);
+        transform.rotation = rotationDelta * transform.rotation;
+        transform.position += controllerAnchor.position - gripAnchor.position;
+    }
+
+    private void UpdateGripAreaHighlight()
+    {
+        if (!showGripAreaHighlight || _state != HammerState.Holstered)
+        {
+            SetGripHighlightsVisible(false);
+            return;
+        }
+
+        bool controllerIsNearGrip = TryGetClosestControllerToGrip(out _, out _, highlightActivationDistance);
+        SetGripHighlightsVisible(controllerIsNearGrip);
+    }
+
+    private bool TryGetClosestControllerToGrip(out Transform closestController, out float closestDistance, float maxDistance)
+    {
+        ResolveControllerAnchors();
+
+        Transform bestController = null;
+        float bestDistance = float.PositiveInfinity;
+
+        CheckController(_leftControllerAnchor);
+        CheckController(_rightControllerAnchor);
+
+        closestController = bestController;
+        closestDistance = bestDistance;
+        return closestController != null && closestDistance <= maxDistance;
+
+        void CheckController(Transform controllerAnchor)
+        {
+            if (controllerAnchor == null)
+            {
+                return;
+            }
+
+            float distance = GetDistanceToGrabbableArea(controllerAnchor.position);
+            if (distance < bestDistance)
+            {
+                bestController = controllerAnchor;
+                bestDistance = distance;
+            }
+        }
+    }
+
+    private float GetDistanceToGrabbableArea(Vector3 position)
+    {
+        if (_colliders == null)
+        {
+            return float.PositiveInfinity;
+        }
+
+        float closestDistance = float.PositiveInfinity;
+
+        foreach (Collider hammerCollider in _colliders)
+        {
+            if (hammerCollider == null || !hammerCollider.enabled || IsNonGrabbableCollider(hammerCollider))
+            {
+                continue;
+            }
+
+            Vector3 closestPoint = hammerCollider.ClosestPoint(position);
+            float distance = Vector3.Distance(position, closestPoint);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+            }
+        }
+
+        return closestDistance;
+    }
+
+    private bool IsNonGrabbableCollider(Collider hammerCollider)
+    {
+        if (nonGrabbableColliders == null)
+        {
+            return false;
+        }
+
+        foreach (Collider nonGrabbableCollider in nonGrabbableColliders)
+        {
+            if (hammerCollider == nonGrabbableCollider)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void CreateGripHighlightsIfNeeded()
+    {
+        if (!showGripAreaHighlight || _gripHighlights.Count > 0)
+        {
+            return;
+        }
+
+        _gripHighlightMaterial = CreateGripHighlightMaterial();
+        MeshRenderer[] sourceRenderers = GetComponentsInChildren<MeshRenderer>(true);
+
+        foreach (MeshRenderer sourceRenderer in sourceRenderers)
+        {
+            if (sourceRenderer == null || sourceRenderer.GetComponent<MeshFilter>() is not MeshFilter sourceFilter || sourceFilter.sharedMesh == null)
+            {
+                continue;
+            }
+
+            GameObject highlight = new GameObject("Hammer Mesh Highlight");
+            highlight.transform.SetParent(sourceRenderer.transform, false);
+            highlight.transform.localPosition = Vector3.zero;
+            highlight.transform.localRotation = Quaternion.identity;
+            highlight.transform.localScale = Vector3.one * gripHighlightMeshScale;
+
+            MeshFilter highlightFilter = highlight.AddComponent<MeshFilter>();
+            highlightFilter.sharedMesh = sourceFilter.sharedMesh;
+
+            MeshRenderer highlightRenderer = highlight.AddComponent<MeshRenderer>();
+            Material[] highlightMaterials = new Material[Mathf.Max(1, sourceRenderer.sharedMaterials.Length)];
+            for (int i = 0; i < highlightMaterials.Length; i++)
+            {
+                highlightMaterials[i] = _gripHighlightMaterial;
+            }
+
+            highlightRenderer.sharedMaterials = highlightMaterials;
+            highlightRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            highlightRenderer.receiveShadows = false;
+
+            highlight.SetActive(false);
+            _gripHighlights.Add(highlight);
+        }
+    }
+
+    private Material CreateGripHighlightMaterial()
+    {
+        Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (shader == null)
+        {
+            shader = Shader.Find("Sprites/Default");
+        }
+
+        Material material = new Material(shader)
+        {
+            name = "Runtime Grip Area Outline"
+        };
+
+        material.color = gripHighlightColor;
+        material.SetOverrideTag("RenderType", "Transparent");
+        if (material.HasProperty("_Cull"))
+        {
+            material.SetInt("_Cull", (int)CullMode.Front);
+        }
+
+        if (material.HasProperty("_SrcBlend"))
+        {
+            material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+        }
+
+        if (material.HasProperty("_DstBlend"))
+        {
+            material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+        }
+
+        if (material.HasProperty("_ZWrite"))
+        {
+            material.SetInt("_ZWrite", 0);
+        }
+
+        if (material.HasProperty("_Surface"))
+        {
+            material.SetFloat("_Surface", 1f);
+        }
+
+        material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        material.renderQueue = (int)RenderQueue.Transparent;
+
+        if (material.HasProperty("_BaseColor"))
+        {
+            material.SetColor("_BaseColor", gripHighlightColor);
+        }
+
+        return material;
+    }
+
+    private void SetGripHighlightsVisible(bool visible)
+    {
+        if (_gripHighlightsVisible == visible)
+        {
+            return;
+        }
+
+        _gripHighlightsVisible = visible;
+
+        foreach (GameObject highlight in _gripHighlights)
+        {
+            if (highlight != null)
+            {
+                highlight.SetActive(visible);
             }
         }
     }
