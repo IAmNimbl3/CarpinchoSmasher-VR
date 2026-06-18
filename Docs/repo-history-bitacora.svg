@@ -1,0 +1,217 @@
+﻿<svg xmlns='http://www.w3.org/2000/svg' width='1500' height='2408' viewBox='0 0 1500 2408'>
+  <rect width='100%' height='100%' fill='#f7f4ec'/>
+  <rect x='0' y='0' width='1500' height='88' fill='#1f2933'/>
+  <text x='56' y='42' font-family='Segoe UI, Arial, sans-serif' font-size='28' font-weight='700' fill='#ffffff'>CarpinchoSmasher VR - Historial del repo</text>
+  <text x='56' y='68' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#cbd5df'>Commits desde GitHub/local - generado el 2026-06-17</text>
+  <rect x='56' y='104' width='1388' height='48' rx='8' fill='#2f3b46'/>
+  <text x='80' y='134' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='700' fill='#ffffff'>FECHA</text>
+  <text x='234' y='134' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='700' fill='#ffffff'>COMMIT</text>
+  <text x='348' y='134' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='700' fill='#ffffff'>AUTOR</text>
+  <text x='616' y='134' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='700' fill='#ffffff'>MENSAJE</text>
+  <rect x='56' y='166' width='1388' height='34' rx='6' fill='#dfe8e2'/>
+  <text x='80' y='189' font-family='Segoe UI, Arial, sans-serif' font-size='16' font-weight='700' fill='#24352b'>2026-04-29</text>
+  <rect x='56' y='204' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='204' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='235' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-04-29</text>
+  <text x='234' y='235' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>811ea67</text>
+  <text x='348' y='235' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>IAmNimbl3</text>
+  <text x='616' y='230' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Initial commit</text>
+  <rect x='56' y='264' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='264' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='295' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-04-29</text>
+  <text x='234' y='295' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>796f923</text>
+  <text x='348' y='295' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='290' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Initial Files</text>
+  <rect x='56' y='324' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='324' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='355' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-04-29</text>
+  <text x='234' y='355' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>069a7a5</text>
+  <text x='348' y='355' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='350' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Fix(hammer): restore throw physics, add map bounds and respawn</text>
+  <rect x='56' y='384' width='1388' height='34' rx='6' fill='#dfe8e2'/>
+  <text x='80' y='407' font-family='Segoe UI, Arial, sans-serif' font-size='16' font-weight='700' fill='#24352b'>2026-05-06</text>
+  <rect x='56' y='422' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='422' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='453' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-06</text>
+  <text x='234' y='453' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>b23a58f</text>
+  <text x='348' y='453' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='448' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Hammer Grab Fix</text>
+  <rect x='56' y='482' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='482' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='513' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-06</text>
+  <text x='234' y='513' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>9f1251d</text>
+  <text x='348' y='513' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='508' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Diegetic UI (Left Hand) First Ver</text>
+  <rect x='56' y='542' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='542' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='573' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-06</text>
+  <text x='234' y='573' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>f1f02ce</text>
+  <text x='348' y='573' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='568' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Basic Map Border</text>
+  <rect x='56' y='602' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='602' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='633' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-06</text>
+  <text x='234' y='633' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>9293cbf</text>
+  <text x='348' y='633' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='628' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Hammer Respawn and Clean + GrabFix?</text>
+  <rect x='56' y='662' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='662' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='693' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-06</text>
+  <text x='234' y='693' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>d984c0c</text>
+  <text x='348' y='693' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='688' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Grab Fix -- Con Alambre</text>
+  <rect x='56' y='722' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='722' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='753' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-06</text>
+  <text x='234' y='753' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>05f6c45</text>
+  <text x='348' y='753' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='748' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Initial Menu Wireframe</text>
+  <rect x='56' y='782' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='782' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='813' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-06</text>
+  <text x='234' y='813' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>cf1a5a0</text>
+  <text x='348' y='813' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='808' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Fixed InitialMenu Position</text>
+  <rect x='56' y='842' width='1388' height='34' rx='6' fill='#dfe8e2'/>
+  <text x='80' y='865' font-family='Segoe UI, Arial, sans-serif' font-size='16' font-weight='700' fill='#24352b'>2026-05-13</text>
+  <rect x='56' y='880' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='880' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='911' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-13</text>
+  <text x='234' y='911' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>b10538c</text>
+  <text x='348' y='911' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='906' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>NewScene</text>
+  <rect x='56' y='940' width='1388' height='34' rx='6' fill='#dfe8e2'/>
+  <text x='80' y='963' font-family='Segoe UI, Arial, sans-serif' font-size='16' font-weight='700' fill='#24352b'>2026-05-19</text>
+  <rect x='56' y='978' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='978' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='1009' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-19</text>
+  <text x='234' y='1009' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>248e5eb</text>
+  <text x='348' y='1009' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='1004' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Add enemy pooling infrastructure</text>
+  <rect x='56' y='1038' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='1038' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='1069' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-19</text>
+  <text x='234' y='1069' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>e2a964b</text>
+  <text x='348' y='1069' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='1064' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Add carpincho subclasses and Paracaidista AI</text>
+  <rect x='56' y='1098' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='1098' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='1129' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-19</text>
+  <text x='234' y='1129' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>c1601ba</text>
+  <text x='348' y='1129' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='1124' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Add Sniper AI and projectile system</text>
+  <rect x='56' y='1158' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='1158' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='1189' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-19</text>
+  <text x='234' y='1189' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>d846aed</text>
+  <text x='348' y='1189' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='1184' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Scene Changes</text>
+  <rect x='56' y='1218' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='1218' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='1249' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-19</text>
+  <text x='234' y='1249' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>efed0dc</text>
+  <text x='348' y='1249' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='1244' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Add Juggernaut AI</text>
+  <rect x='56' y='1278' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='1278' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='1309' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-19</text>
+  <text x='234' y='1309' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>ffd2177</text>
+  <text x='348' y='1309' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='1304' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Add Velocista AI</text>
+  <rect x='56' y='1338' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='1338' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='1369' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-19</text>
+  <text x='234' y='1369' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>f219bc3</text>
+  <text x='348' y='1369' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='1364' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Add circular spawn areas to SpawnPoint</text>
+  <rect x='56' y='1398' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='1398' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='1429' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-19</text>
+  <text x='234' y='1429' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>ee75660</text>
+  <text x='348' y='1429' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='1424' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Replace hammer grab system with trigger-summoned hammer</text>
+  <rect x='56' y='1458' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='1458' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='1489' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-19</text>
+  <text x='234' y='1489' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>8bcd6b9</text>
+  <text x='348' y='1489' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='1484' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Optimize hot paths: cache Camera.main and use squared distance</text>
+  <rect x='56' y='1518' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='1518' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='1549' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-19</text>
+  <text x='234' y='1549' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>b72e8e2</text>
+  <text x='348' y='1549' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='1544' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Update scene</text>
+  <rect x='56' y='1578' width='1388' height='34' rx='6' fill='#dfe8e2'/>
+  <text x='80' y='1601' font-family='Segoe UI, Arial, sans-serif' font-size='16' font-weight='700' fill='#24352b'>2026-05-27</text>
+  <rect x='56' y='1616' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='1616' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='1647' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-27</text>
+  <text x='234' y='1647' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>e277d8b</text>
+  <text x='348' y='1647' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='1642' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Velocista Default Speed changed</text>
+  <rect x='56' y='1676' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='1676' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='1707' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-05-27</text>
+  <text x='234' y='1707' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>656cabc</text>
+  <text x='348' y='1707' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='1702' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Scene with assets integrated with logic scene</text>
+  <rect x='56' y='1736' width='1388' height='34' rx='6' fill='#dfe8e2'/>
+  <text x='80' y='1759' font-family='Segoe UI, Arial, sans-serif' font-size='16' font-weight='700' fill='#24352b'>2026-06-03</text>
+  <rect x='56' y='1774' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='1774' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='1805' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-06-03</text>
+  <text x='234' y='1805' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>79cd37c</text>
+  <text x='348' y='1805' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='1800' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Hammer Grab Fix</text>
+  <rect x='56' y='1834' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='1834' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='1865' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-06-03</text>
+  <text x='234' y='1865' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>c177c3f</text>
+  <text x='348' y='1865' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='1860' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Hand Tracking Removed</text>
+  <rect x='56' y='1894' width='1388' height='34' rx='6' fill='#dfe8e2'/>
+  <text x='80' y='1917' font-family='Segoe UI, Arial, sans-serif' font-size='16' font-weight='700' fill='#24352b'>2026-06-10</text>
+  <rect x='56' y='1932' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='1932' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='1963' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-06-10</text>
+  <text x='234' y='1963' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>d2999f5</text>
+  <text x='348' y='1963' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='1958' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Martincito Added</text>
+  <rect x='56' y='1992' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='1992' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='2023' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-06-10</text>
+  <text x='234' y='2023' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>ff3dbe3</text>
+  <text x='348' y='2023' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='2018' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Fixes varios de carpinchos</text>
+  <rect x='56' y='2052' width='1388' height='34' rx='6' fill='#dfe8e2'/>
+  <text x='80' y='2075' font-family='Segoe UI, Arial, sans-serif' font-size='16' font-weight='700' fill='#24352b'>2026-06-16</text>
+  <rect x='56' y='2090' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='2090' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='2121' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-06-16</text>
+  <text x='234' y='2121' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>a0a887f</text>
+  <text x='348' y='2121' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='2116' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Hammer migrated to Meta Components + Crouch and HandTracking disabled</text>
+  <rect x='56' y='2150' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='2150' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='2181' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-06-16</text>
+  <text x='234' y='2181' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>daf105a</text>
+  <text x='348' y='2181' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='2176' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Hammer Mechanics Polished + Seated/Standing config added</text>
+  <rect x='56' y='2210' width='1388' height='54' rx='8' fill='#fbfaf6' stroke='#e1ded5'/>
+  <rect x='56' y='2210' width='8' height='54' rx='4' fill='#27ae60'/>
+  <text x='80' y='2241' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-06-16</text>
+  <text x='234' y='2241' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>7161d7f</text>
+  <text x='348' y='2241' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>nimbl3_</text>
+  <text x='616' y='2236' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Snap Collider &amp; Action + Outline</text>
+  <rect x='56' y='2270' width='1388' height='34' rx='6' fill='#dfe8e2'/>
+  <text x='80' y='2293' font-family='Segoe UI, Arial, sans-serif' font-size='16' font-weight='700' fill='#24352b'>2026-06-17</text>
+  <rect x='56' y='2308' width='1388' height='54' rx='8' fill='#ffffff' stroke='#e1ded5'/>
+  <rect x='56' y='2308' width='8' height='54' rx='4' fill='#2f80ed'/>
+  <text x='80' y='2339' font-family='Segoe UI, Arial, sans-serif' font-size='14' fill='#334155'>2026-06-17</text>
+  <text x='234' y='2339' font-family='Cascadia Mono, Consolas, monospace' font-size='14' fill='#475569'>da9486a</text>
+  <text x='348' y='2339' font-family='Segoe UI, Arial, sans-serif' font-size='14' font-weight='600' fill='#334155'>Mauro Nahuel Uriarte</text>
+  <text x='616' y='2334' font-family='Segoe UI, Arial, sans-serif' font-size='15' fill='#111827'>Hide Meta controller models, show synthetic hands</text>
+  <text x='56' y='2386' font-family='Segoe UI, Arial, sans-serif' font-size='12' fill='#64748b'>Autores coloreados: Mauro Nahuel Uriarte azul, nimbl3_ verde, otros violeta.</text>
+</svg>
+
