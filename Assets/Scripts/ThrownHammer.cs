@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using Oculus.Interaction;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 public class ThrownHammer : MonoBehaviour
 {
@@ -36,8 +34,7 @@ public class ThrownHammer : MonoBehaviour
     [SerializeField, Min(0f)] private float holsteredGripColliderPadding = 0.07f;
     [SerializeField] private bool showGripAreaHighlight = true;
     [SerializeField, Min(0f)] private float highlightActivationDistance = 0.06f;
-    [SerializeField, Min(1f)] private float gripHighlightMeshScale = 1.035f;
-    [SerializeField] private Color gripHighlightColor = new Color(1f, 0.82f, 0.15f, 0.32f);
+    [SerializeField] private MeshOutlineHighlighter gripHighlighter;
 
     private Rigidbody _rigidbody;
     private Collider[] _colliders;
@@ -53,8 +50,6 @@ public class ThrownHammer : MonoBehaviour
     private OVRCameraRig _cameraRig;
     private Transform _leftControllerAnchor;
     private Transform _rightControllerAnchor;
-    private readonly List<GameObject> _gripHighlights = new();
-    private Material _gripHighlightMaterial;
     private bool _gripHighlightsVisible;
     private bool _holsteredGripAreaInflated;
 
@@ -219,6 +214,11 @@ public class ThrownHammer : MonoBehaviour
             _grabbable = GetComponent<Grabbable>();
         }
 
+        if (gripHighlighter == null)
+        {
+            gripHighlighter = GetComponent<MeshOutlineHighlighter>();
+        }
+
         if (_damageDealer == null)
         {
             _damageDealer = GetComponent<HammerDamageDealer>();
@@ -250,7 +250,7 @@ public class ThrownHammer : MonoBehaviour
         }
 
         ResolveControllerAnchors();
-        CreateGripHighlightsIfNeeded();
+        ConfigureGripHighlight();
     }
 
     private void ConfigureGrabbable()
@@ -530,97 +530,20 @@ public class ThrownHammer : MonoBehaviour
         return false;
     }
 
-    private void CreateGripHighlightsIfNeeded()
+    private void ConfigureGripHighlight()
     {
-        if (!showGripAreaHighlight || _gripHighlights.Count > 0)
+        if (!showGripAreaHighlight)
         {
             return;
         }
 
-        _gripHighlightMaterial = CreateGripHighlightMaterial();
-        MeshRenderer[] sourceRenderers = GetComponentsInChildren<MeshRenderer>(true);
-
-        foreach (MeshRenderer sourceRenderer in sourceRenderers)
+        if (gripHighlighter == null)
         {
-            if (sourceRenderer == null || sourceRenderer.GetComponent<MeshFilter>() is not MeshFilter sourceFilter || sourceFilter.sharedMesh == null)
-            {
-                continue;
-            }
-
-            GameObject highlight = new GameObject("Hammer Mesh Highlight");
-            highlight.transform.SetParent(sourceRenderer.transform, false);
-            highlight.transform.localPosition = Vector3.zero;
-            highlight.transform.localRotation = Quaternion.identity;
-            highlight.transform.localScale = Vector3.one * gripHighlightMeshScale;
-
-            MeshFilter highlightFilter = highlight.AddComponent<MeshFilter>();
-            highlightFilter.sharedMesh = sourceFilter.sharedMesh;
-
-            MeshRenderer highlightRenderer = highlight.AddComponent<MeshRenderer>();
-            Material[] highlightMaterials = new Material[Mathf.Max(1, sourceRenderer.sharedMaterials.Length)];
-            for (int i = 0; i < highlightMaterials.Length; i++)
-            {
-                highlightMaterials[i] = _gripHighlightMaterial;
-            }
-
-            highlightRenderer.sharedMaterials = highlightMaterials;
-            highlightRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            highlightRenderer.receiveShadows = false;
-
-            highlight.SetActive(false);
-            _gripHighlights.Add(highlight);
-        }
-    }
-
-    private Material CreateGripHighlightMaterial()
-    {
-        Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-        if (shader == null)
-        {
-            shader = Shader.Find("Sprites/Default");
+            return;
         }
 
-        Material material = new Material(shader)
-        {
-            name = "Runtime Grip Area Outline"
-        };
-
-        material.color = gripHighlightColor;
-        material.SetOverrideTag("RenderType", "Transparent");
-        if (material.HasProperty("_Cull"))
-        {
-            material.SetInt("_Cull", (int)CullMode.Front);
-        }
-
-        if (material.HasProperty("_SrcBlend"))
-        {
-            material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
-        }
-
-        if (material.HasProperty("_DstBlend"))
-        {
-            material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
-        }
-
-        if (material.HasProperty("_ZWrite"))
-        {
-            material.SetInt("_ZWrite", 0);
-        }
-
-        if (material.HasProperty("_Surface"))
-        {
-            material.SetFloat("_Surface", 1f);
-        }
-
-        material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-        material.renderQueue = (int)RenderQueue.Transparent;
-
-        if (material.HasProperty("_BaseColor"))
-        {
-            material.SetColor("_BaseColor", gripHighlightColor);
-        }
-
-        return material;
+        gripHighlighter.enabled = false;
+        _gripHighlightsVisible = false;
     }
 
     private void SetGripHighlightsVisible(bool visible)
@@ -632,12 +555,9 @@ public class ThrownHammer : MonoBehaviour
 
         _gripHighlightsVisible = visible;
 
-        foreach (GameObject highlight in _gripHighlights)
+        if (gripHighlighter != null)
         {
-            if (highlight != null)
-            {
-                highlight.SetActive(visible);
-            }
+            gripHighlighter.enabled = visible;
         }
     }
 }

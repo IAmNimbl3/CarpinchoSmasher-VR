@@ -391,6 +391,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 21d2014ae201db14db1d40bbd61e5651, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8961683420201937996}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 21d2014ae201db14db1d40bbd61e5651, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8422397792677837539}
   m_SourcePrefab: {fileID: 100100000, guid: 21d2014ae201db14db1d40bbd61e5651, type: 3}
 --- !u!33 &1201550644803757898 stripped
 MeshFilter:
@@ -505,8 +508,7 @@ MonoBehaviour:
   holsteredGripColliderPadding: 0.07
   showGripAreaHighlight: 1
   highlightActivationDistance: 0.06
-  gripHighlightMeshScale: 1.035
-  gripHighlightColor: {r: 0, g: 0.9790795, b: 1, a: 0.5294118}
+  gripHighlighter: {fileID: 8422397792677837539}
 --- !u!114 &3873126128900222377
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -543,3 +545,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HammerDamageDealer
   damageEnabled: 0
+--- !u!114 &8422397792677837539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4527349563257950671}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b480d21f3371f214281e5f61e4617b7d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MeshOutlineHighlighter
+  outlineColor: {r: 1, g: 0.82, b: 0.15, a: 0.32}
+  outlineWidth: 0.015
+  outlineMaterial: {fileID: 0}
