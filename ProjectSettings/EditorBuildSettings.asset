@@ -6,11 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/StartMenu.unity
-    guid: ce5858e0021b26b4ab262936b2b01992
+    path: Assets/Scenes/StartOptimizada/Sample Optimizada.unity
+    guid: a6c6e790a6c797f40a467ec5e6577ccd
   - enabled: 1
     path: Assets/Scenes/SceneMapaVR.unity
-    guid: 79da7ec275d003947bc90ab5eecc11fd
+    guid: 6a2d4a5d4992ed0458ffb4ebc3ceb81b
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 03509a0163c38884d8fb97d9dd904d5b, type: 2}
