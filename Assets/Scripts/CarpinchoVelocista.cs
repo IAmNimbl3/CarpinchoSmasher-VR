@@ -8,9 +8,7 @@ public class CarpinchoVelocista : Enemy
     {
         Chasing,
         Telegraphing,
-        Attacking,
-        Vulnerable,
-        Recovering
+        Attacking
     }
 
     [Header("Velocista · Chase")]
@@ -29,16 +27,10 @@ public class CarpinchoVelocista : Enemy
     [SerializeField, Min(0.1f)] private float hitRadius = 0.7f;
     [SerializeField, Min(0)] private int attackDamage = 1;
 
-    [Header("Velocista · Vulnerable")]
-    [Tooltip("Ventana en la que el jugador puede matarlo con golpe directo.")]
-    [SerializeField, Min(0.1f)] private float vulnerableDuration = 1.2f;
-    [SerializeField, Min(0.1f)] private float recoveryDuration = 0.5f;
-
     [Header("Velocista · Visuals")]
-    [Tooltip("Indicador de estado encima de la cabeza. Cambia de color en Telegraph y Vulnerable.")]
+    [Tooltip("Indicador de estado encima de la cabeza durante el casteo del ataque.")]
     [SerializeField] private GameObject stateIndicator;
     [SerializeField] private Color telegraphColor = new Color(1f, 0.9f, 0f);
-    [SerializeField] private Color vulnerableColor = new Color(0.2f, 0.7f, 1f);
 
     public override CarpinchoType Type => CarpinchoType.Velocista;
 
@@ -100,12 +92,6 @@ public class CarpinchoVelocista : Enemy
                 break;
             case State.Attacking:
                 TickAttacking();
-                break;
-            case State.Vulnerable:
-                TickVulnerable();
-                break;
-            case State.Recovering:
-                TickRecovering();
                 break;
         }
     }
@@ -224,61 +210,34 @@ public class CarpinchoVelocista : Enemy
             {
                 // TODO: enganchar con PlayerHealth (GDD §9 TBD).
                 Debug.Log($"[Velocista] Lunge impactó al jugador ({attackDamage}).", this);
-                EnterRecovering();
+                EnterNextAttackCycle(playerPos);
                 return;
             }
         }
 
         if (_stateTimer <= 0f)
         {
-            EnterVulnerable();
+            if (PlayerTarget.TryGetPosition(out Vector3 currentPlayerPos))
+            {
+                EnterNextAttackCycle(currentPlayerPos);
+            }
+            else
+            {
+                EnterChasing();
+            }
         }
     }
 
-    private void EnterVulnerable()
+    private void EnterNextAttackCycle(Vector3 playerPos)
     {
-        _state = State.Vulnerable;
-        _stateTimer = vulnerableDuration;
-        if (_agent != null && _agent.isOnNavMesh)
+        float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
+        if (sqr <= meleeRange * meleeRange)
         {
-            _agent.ResetPath();
-            _agent.isStopped = true;
-            _agent.updateRotation = false;
-        }
-        ShowIndicator(vulnerableColor);
-    }
-
-    private void TickVulnerable()
-    {
-        if (_stateTimer <= 0f)
-        {
-            EnterRecovering();
-        }
-    }
-
-    private void EnterRecovering()
-    {
-        _state = State.Recovering;
-        _stateTimer = recoveryDuration;
-        HideIndicator();
-    }
-
-    private void TickRecovering()
-    {
-        if (_stateTimer <= 0f)
-        {
-            EnterChasing();
-        }
-    }
-
-    protected override void OnCollisionEnter(Collision collision)
-    {
-        // Eliminable únicamente durante la ventana vulnerable (GDD §7.2).
-        if (_state != State.Vulnerable)
-        {
+            EnterTelegraphing();
             return;
         }
-        base.OnCollisionEnter(collision);
+
+        EnterChasing();
     }
 
     private void ShowIndicator(Color color)

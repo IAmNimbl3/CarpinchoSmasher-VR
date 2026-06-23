@@ -19,23 +19,38 @@ public class HammerDamageDealer : MonoBehaviour
 
     public bool TryDamage(Enemy enemy)
     {
+        return TryDamage(enemy, transform.position);
+    }
+
+    public bool TryDamage(Enemy enemy, Vector3 hitPoint)
+    {
         if (!damageEnabled || enemy == null || enemy.IsDead || _hitEnemies.Contains(enemy))
         {
             return false;
         }
 
+        if (!enemy.TryReceiveDamage(this, hitPoint))
+        {
+            return false;
+        }
+
         _hitEnemies.Add(enemy);
-        enemy.Die();
         return true;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        TryDamage(other.GetComponentInParent<Enemy>());
+        Enemy enemy = other.GetComponentInParent<Enemy>();
+        Vector3 hitPoint = other.ClosestPoint(transform.position);
+        TryDamage(enemy, hitPoint);
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        TryDamage(collision.collider.GetComponentInParent<Enemy>());
+        Enemy enemy = collision.collider.GetComponentInParent<Enemy>();
+        Vector3 hitPoint = collision.contactCount > 0
+            ? collision.GetContact(0).point
+            : collision.collider.ClosestPoint(transform.position);
+        TryDamage(enemy, hitPoint);
     }
 }

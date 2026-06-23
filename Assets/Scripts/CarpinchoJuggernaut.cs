@@ -1,12 +1,34 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class CarpinchoJuggernaut : Enemy
 {
-    [Header("Juggernaut · Movement")]
-    [Tooltip("Intervalo entre llamadas a SetDestination. Más alto = menos recálculos de path.")]
+    private enum State
+    {
+        Chasing,
+        Telegraphing,
+        Attacking
+    }
+
+    [Header("Juggernaut · Chase")]
+    [SerializeField, Min(1f)] private float chaseSpeed = 1f;
     [SerializeField, Min(0.1f)] private float repathInterval = 0.5f;
+    [Tooltip("Distancia al jugador a la que arranca el casteo del ataque.")]
+    [SerializeField, Min(0.3f)] private float meleeRange = 1.6f;
+
+    [Header("Juggernaut · Telegraph + Lunge")]
+    [Tooltip("Duración del casteo antes del lunge. Más largo = más tiempo para reaccionar.")]
+    [SerializeField, Min(0.1f)] private float telegraphDuration = 0.8f;
+    [Tooltip("Duración del lunge committed (no gira durante este tiempo).")]
+    [SerializeField, Min(0.1f)] private float lungeDuration = 0.45f;
+    [SerializeField, Min(1f)] private float lungeSpeed = 4f;
+    [FormerlySerializedAs("damageDistance")]
+    [Tooltip("Radio al jugador durante el lunge. Si está dentro, daño.")]
+    [SerializeField, Min(0.1f)] private float hitRadius = 1f;
+    [FormerlySerializedAs("contactDamage")]
+    [SerializeField, Min(0)] private int attackDamage = 1;
 
     [Header("Juggernaut · Escudo")]
     [Tooltip("Tamaño del arco vulnerable en grados, centrado en el ángulo actual.")]
@@ -19,19 +41,15 @@ public class CarpinchoJuggernaut : Enemy
     [SerializeField] private float indicatorVerticalOffset = 0.1f;
     [SerializeField] private Color indicatorColor = new Color(1f, 0.2f, 0.1f);
 
-    [Header("Juggernaut · Daño por contacto")]
-    [Tooltip("Distancia al HMD a la que se aplica daño por contacto.")]
-    [SerializeField, Min(0.1f)] private float damageDistance = 0.8f;
-    [SerializeField, Min(0)] private int contactDamage = 1;
-    [SerializeField, Min(0.1f)] private float damageCooldown = 1f;
-
     public override CarpinchoType Type => CarpinchoType.Juggernaut;
 
     private NavMeshAgent _agent;
+    private State _state;
+    private float _stateTimer;
     private float _vulnerableAngle;
     private float _zoneTimer;
     private float _repathTimer;
-    private float _lastDamageTime;
+    private Vector3 _lungeDirection;
     private MaterialPropertyBlock _propertyBlock;
 
     protected override void Awake()
@@ -50,16 +68,15 @@ public class CarpinchoJuggernaut : Enemy
             {
                 _agent.Warp(hit.position);
             }
-            _agent.isStopped = false;
+            _agent.speed = chaseSpeed;
         }
 
         _vulnerableAngle = Random.Range(-180f, 180f);
         _zoneTimer = zoneRotationInterval;
-        _repathTimer = 0f;
-        _lastDamageTime = -damageCooldown;
 
         ApplyIndicatorColor();
         UpdateIndicatorTransform();
+        EnterChasing();
     }
 
     public override void OnDespawned()
@@ -78,29 +95,60 @@ public class CarpinchoJuggernaut : Enemy
             return;
         }
 
-        TickChase();
         TickZoneRotation();
         UpdateIndicatorTransform();
-        TickContactDamage();
+
+        _stateTimer -= Time.deltaTime;
+
+        switch (_state)
+        {
+            case State.Chasing:
+                TickChasing();
+                break;
+            case State.Telegraphing:
+                TickTelegraphing();
+                break;
+            case State.Attacking:
+                TickAttacking();
+                break;
+        }
     }
 
-    private void TickChase()
+    private void EnterChasing()
     {
-        _repathTimer -= Time.deltaTime;
-        if (_repathTimer > 0f)
+        _state = State.Chasing;
+        if (_agent != null)
         {
-            return;
+            _agent.isStopped = false;
+            _agent.updateRotation = true;
+            _agent.speed = chaseSpeed;
         }
-        _repathTimer = repathInterval;
+        _repathTimer = 0f;
+    }
 
+    private void TickChasing()
+    {
         if (_agent == null || !_agent.isOnNavMesh)
         {
             return;
         }
 
-        if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
+        if (!PlayerTarget.TryGetPosition(out Vector3 playerPos))
+        {
+            return;
+        }
+
+        _repathTimer -= Time.deltaTime;
+        if (_repathTimer <= 0f)
         {
             _agent.SetDestination(playerPos);
+            _repathTimer = repathInterval;
+        }
+
+        float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
+        if (sqr <= meleeRange * meleeRange)
+        {
+            EnterTelegraphing();
         }
     }
 
@@ -117,27 +165,106 @@ public class CarpinchoJuggernaut : Enemy
         _vulnerableAngle = NormalizeAngle(_vulnerableAngle + offset);
     }
 
-    private void TickContactDamage()
+    private void EnterTelegraphing()
     {
-        if (!PlayerTarget.TryGetPosition(out Vector3 playerPos))
+        _state = State.Telegraphing;
+        _stateTimer = telegraphDuration;
+        if (_agent != null)
         {
-            return;
+            _agent.ResetPath();
+            _agent.isStopped = true;
+            _agent.updateRotation = false;
+        }
+    }
+
+    private void TickTelegraphing()
+    {
+        if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
+        {
+            Vector3 look = playerPos - transform.position;
+            look.y = 0f;
+            if (look.sqrMagnitude > 0.0001f)
+            {
+                Quaternion target = Quaternion.LookRotation(look);
+                transform.rotation = Quaternion.Slerp(transform.rotation, target, Time.deltaTime * 10f);
+            }
         }
 
+        if (_stateTimer <= 0f)
+        {
+            EnterAttacking();
+        }
+    }
+
+    private void EnterAttacking()
+    {
+        _state = State.Attacking;
+        _stateTimer = lungeDuration;
+
+        if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
+        {
+            Vector3 dir = playerPos - transform.position;
+            dir.y = 0f;
+            _lungeDirection = dir.sqrMagnitude > 0.0001f ? dir.normalized : transform.forward;
+        }
+        else
+        {
+            _lungeDirection = transform.forward;
+        }
+
+        if (_lungeDirection.sqrMagnitude > 0.0001f)
+        {
+            transform.rotation = Quaternion.LookRotation(_lungeDirection);
+        }
+    }
+
+    private void TickAttacking()
+    {
+        Vector3 step = _lungeDirection * lungeSpeed * Time.deltaTime;
+        if (_agent != null && _agent.isOnNavMesh)
+        {
+            _agent.Move(step);
+        }
+        else
+        {
+            transform.position += step;
+        }
+
+        if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
+        {
+            float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
+            if (sqr <= hitRadius * hitRadius)
+            {
+                // TODO: enganchar con PlayerHealth (GDD §9 TBD).
+                Debug.Log($"[Juggernaut] Lunge impactó al jugador ({attackDamage}).", this);
+                EnterNextAttackCycle(playerPos);
+                return;
+            }
+        }
+
+        if (_stateTimer <= 0f)
+        {
+            if (PlayerTarget.TryGetPosition(out Vector3 currentPlayerPos))
+            {
+                EnterNextAttackCycle(currentPlayerPos);
+            }
+            else
+            {
+                EnterChasing();
+            }
+        }
+    }
+
+    private void EnterNextAttackCycle(Vector3 playerPos)
+    {
         float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
-        if (sqr > damageDistance * damageDistance)
+        if (sqr <= meleeRange * meleeRange)
         {
+            EnterTelegraphing();
             return;
         }
 
-        if (Time.time < _lastDamageTime + damageCooldown)
-        {
-            return;
-        }
-
-        _lastDamageTime = Time.time;
-        // TODO: enganchar con PlayerHealth (GDD §9 TBD).
-        Debug.Log($"[Juggernaut] Daño por contacto al jugador ({contactDamage}).", this);
+        EnterChasing();
     }
 
     private void UpdateIndicatorTransform()
@@ -184,22 +311,37 @@ public class CarpinchoJuggernaut : Enemy
             return;
         }
 
-        if (!IsHitInVulnerableArc(collision))
+        Vector3 hitPoint = collision.contactCount > 0
+            ? collision.GetContact(0).point
+            : collision.collider.ClosestPoint(transform.position);
+
+        if (!IsHitInVulnerableArc(hitPoint))
         {
+            return;
+        }
+
+        HammerDamageDealer hammerDamageDealer = collision.gameObject.GetComponentInParent<HammerDamageDealer>();
+        if (hammerDamageDealer != null)
+        {
+            hammerDamageDealer.TryDamage(this, hitPoint);
             return;
         }
 
         base.OnCollisionEnter(collision);
     }
 
-    private bool IsHitInVulnerableArc(Collision collision)
+    public override bool TryReceiveDamage(HammerDamageDealer damageDealer, Vector3 hitPoint)
     {
-        if (collision.contactCount == 0)
+        if (!IsHitInVulnerableArc(hitPoint))
         {
             return false;
         }
 
-        Vector3 hitPoint = collision.GetContact(0).point;
+        return base.TryReceiveDamage(damageDealer, hitPoint);
+    }
+
+    private bool IsHitInVulnerableArc(Vector3 hitPoint)
+    {
         Vector3 toHit = hitPoint - transform.position;
         toHit.y = 0f;
         if (toHit.sqrMagnitude < 0.0001f)

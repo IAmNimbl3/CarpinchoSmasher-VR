@@ -99,4 +99,15 @@ public class Enemy : MonoBehaviour
 
         Died?.Invoke(this);
     }
+
+    public virtual bool TryReceiveDamage(HammerDamageDealer damageDealer, Vector3 hitPoint)
+    {
+        if (_isDead)
+        {
+            return false;
+        }
+
+        Die();
+        return true;
+    }
 }
