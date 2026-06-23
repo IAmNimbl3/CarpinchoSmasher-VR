@@ -92,6 +92,8 @@ public class Enemy : MonoBehaviour
 
         _isDead = true;
 
+        GameAudioEvents.RaiseCarpinchoDied(transform.position);
+
         if (deathVfx != null)
         {
             Instantiate(deathVfx, transform.position, Quaternion.identity);

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b2e462670da154ab2a60d09941adbd, type: 3}
+  m_Name: GameAudioLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::AudioLibrary
+  menuMusic: {fileID: 11400000, guid: ac2cdbc2a8259fb46a3710c186e3eab7, type: 2}
+  gameplayMusic: {fileID: 11400000, guid: b03dab34c7669a54180c8d881aa8fc78, type: 2}
+  defeatMusic: {fileID: 11400000, guid: 54d64b85b301afa4eaa34b80e2d34505, type: 2}
+  carpinchoDeath: {fileID: 11400000, guid: 3e3fb5f18136ff54d854382fcb00e138, type: 2}
+  hammerGrab: {fileID: 11400000, guid: 14d8858e4e488ae44accbc191240b190, type: 2}
+  menuTeleport: {fileID: 11400000, guid: 4ed476f321e259d4c9ea7d82fbf6ffa3, type: 2}

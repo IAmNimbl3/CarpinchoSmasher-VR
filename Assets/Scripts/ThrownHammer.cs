@@ -157,6 +157,7 @@ public class ThrownHammer : MonoBehaviour
         }
 
         Grabbed?.Invoke(this);
+        GameAudioEvents.RaiseHammerGrabbed(transform.position);
     }
 
     private void BeginLaunched()

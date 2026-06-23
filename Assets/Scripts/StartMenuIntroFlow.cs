@@ -61,6 +61,7 @@ public class StartMenuIntroFlow : MonoBehaviour
     {
         _menuActivated = true;
         tvMenuRoot.SetActive(true);
+        GameAudioEvents.RaiseMenuTeleported(tvTeleportPoint.position);
 
         if (hideIntroLogoWhenMenuActivates && introLogoRoot != null)
         {
