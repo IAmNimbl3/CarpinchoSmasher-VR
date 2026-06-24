@@ -167,33 +167,12 @@ public class Enemy : MonoBehaviour
 
     protected void PlayChargeAnimation()
     {
-        SetAnimationSpeed(1f);
         SetWalkingAnimation(false);
         PlayStateIfAvailable(ChargeState, 0.06f);
     }
 
     protected void PlayMeleeAnimation()
     {
-        SetAnimationSpeed(1f);
-        SetWalkingAnimation(false);
-        if (_animator != null && _hasMeleeParameter)
-        {
-            _animator.SetTrigger(MeleeParameter);
-        }
-
-        PlayStateIfAvailable(MeleeState, 0.04f);
-    }
-
-    protected void PlayChargeAnimation(float speed)
-    {
-        SetAnimationSpeed(speed);
-        SetWalkingAnimation(false);
-        PlayStateIfAvailable(ChargeState, 0.06f);
-    }
-
-    protected void PlayMeleeAnimation(float speed)
-    {
-        SetAnimationSpeed(speed);
         SetWalkingAnimation(false);
         if (_animator != null && _hasMeleeParameter)
         {
@@ -205,7 +184,6 @@ public class Enemy : MonoBehaviour
 
     protected void PlayShootAnimation()
     {
-        SetAnimationSpeed(1f);
         SetWalkingAnimation(false);
         if (_animator != null && _hasShootParameter)
         {
@@ -213,19 +191,6 @@ public class Enemy : MonoBehaviour
         }
 
         PlayStateIfAvailable(ShootState, 0.02f);
-    }
-
-    protected void SetAnimationSpeed(float speed)
-    {
-        if (_animator != null)
-        {
-            _animator.speed = Mathf.Max(0.05f, speed);
-        }
-    }
-
-    protected void ResetAnimationSpeed()
-    {
-        SetAnimationSpeed(1f);
     }
 
     protected void ForceUprightRotation()
@@ -275,7 +240,6 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        _animator.speed = 1f;
         _animator.Rebind();
         _animator.Update(0f);
     }

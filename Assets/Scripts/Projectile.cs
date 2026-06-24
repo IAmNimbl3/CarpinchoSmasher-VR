@@ -14,11 +14,8 @@ public class Projectile : MonoBehaviour
     [Header("VFX")]
     [SerializeField] private GameObject impactVfx;
 
-    public bool IsDeflected => _isDeflected;
-
     private Vector3 _direction;
     private float _elapsed;
-    private bool _isDeflected;
     private Rigidbody _rigidbody;
 
     private void Awake()
@@ -45,7 +42,6 @@ public class Projectile : MonoBehaviour
         }
 
         _elapsed = 0f;
-        _isDeflected = false;
 
         ApplyVelocity();
     }
@@ -59,12 +55,11 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        if (!_isDeflected && PlayerTarget.TryGetPosition(out Vector3 playerPos))
+        if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
             float sqr = (transform.position - playerPos).sqrMagnitude;
             if (sqr <= playerHitRadius * playerHitRadius)
             {
-                // TODO: enganchar con PlayerHealth (GDD §9 TBD).
                 Debug.Log($"[Projectile] Impacto a jugador. Daño: {damage}.", this);
                 PlayerHealth.TryDamage(damage, this);
                 Impact();
@@ -84,36 +79,19 @@ public class Projectile : MonoBehaviour
 
     private void HandleHit(GameObject obj)
     {
-        if (obj.CompareTag("Weapon"))
+        if (obj.CompareTag("Weapon") || obj.GetComponentInParent<HammerDamageDealer>() != null)
         {
-            Deflect();
+            Impact();
             return;
         }
 
         Enemy enemy = obj.GetComponentInParent<Enemy>();
         if (enemy != null)
         {
-            // Sin deflectar el proyectil atraviesa a los carpinchos (sin friendly fire).
-            // Repelido con el martillo, puede matar a cualquiera, incluido el tirador.
-            if (!_isDeflected)
-            {
-                return;
-            }
-
-            enemy.Die();
-            Impact();
             return;
         }
 
         Impact();
-    }
-
-    private void Deflect()
-    {
-        _isDeflected = true;
-        _direction = -_direction;
-        transform.rotation = Quaternion.LookRotation(_direction);
-        ApplyVelocity();
     }
 
     private void ApplyVelocity()

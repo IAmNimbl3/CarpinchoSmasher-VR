@@ -23,8 +23,6 @@ public class CarpinchoVelocista : Enemy
     [Tooltip("Duración del lunge committed (no gira durante este tiempo).")]
     [SerializeField, Min(0.1f)] private float lungeDuration = 0.4f;
     [SerializeField, Min(1f)] private float lungeSpeed = 6f;
-    [SerializeField, Min(0.05f)] private float chargeAnimationSpeed = 0.65f;
-    [SerializeField, Min(0.05f)] private float attackAnimationSpeed = 0.6f;
     [Tooltip("Radio al jugador durante el lunge. Si está dentro, daño. Si nunca entró, esquivó.")]
     [SerializeField, Min(0.1f)] private float hitRadius = 0.7f;
     [SerializeField, Min(0)] private int attackDamage = 10;
@@ -103,7 +101,6 @@ public class CarpinchoVelocista : Enemy
     private void EnterChasing()
     {
         _state = State.Chasing;
-        ResetAnimationSpeed();
         SetWalkingAnimation(true);
         if (_agent != null)
         {
@@ -147,7 +144,7 @@ public class CarpinchoVelocista : Enemy
     {
         _state = State.Telegraphing;
         _stateTimer = telegraphDuration;
-        PlayChargeAnimation(chargeAnimationSpeed);
+        PlayChargeAnimation();
         if (_agent != null)
         {
             _agent.ResetPath();
@@ -159,7 +156,7 @@ public class CarpinchoVelocista : Enemy
 
     private void TickTelegraphing()
     {
-        PlayChargeAnimation(chargeAnimationSpeed);
+        PlayChargeAnimation();
 
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
@@ -183,7 +180,7 @@ public class CarpinchoVelocista : Enemy
         _state = State.Attacking;
         _stateTimer = lungeDuration;
         _hasHitThisAttack = false;
-        PlayMeleeAnimation(attackAnimationSpeed);
+        PlayMeleeAnimation();
 
         if (_agent != null)
         {

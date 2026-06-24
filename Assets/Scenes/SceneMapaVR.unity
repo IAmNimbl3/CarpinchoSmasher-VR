@@ -29809,6 +29809,7 @@ MonoBehaviour:
   spawner: {fileID: 1704790173}
   cameraRig: {fileID: 1429269525}
   playerHealth: {fileID: 0}
+  playerMaxHealth: 500
   createRoundUiOnAwake: 1
   uiDistanceFromCamera: 1.4
   uiOffset: {x: 0, y: -0.04, z: 0}
@@ -29817,11 +29818,14 @@ MonoBehaviour:
   accentColor: {r: 1, g: 0.702432, b: 0.1490196, a: 0.95}
   useControllerRayForRoundUi: 1
   roundUiRayLength: 8
+  roundUiRayColor: {r: 1, g: 0.82, b: 0.15, a: 0.9}
+  roundUiRayHoverColor: {r: 0.2, g: 0.9, b: 1, a: 0.95}
+  roundUiRayWidth: 0.012
   defaultScorePerKill: 10
   menuSceneName: Sample Optimizada
   createHealthHudOnAwake: 1
   healthHudSize: {x: 320, y: 72}
-  healthHudBottomOffset: 180
+  healthHudBottomOffset: 220
   healthHudColor: {r: 0, g: 0, b: 0, a: 0.55}
 --- !u!4 &2038409989
 Transform:

@@ -72,11 +72,18 @@ MonoBehaviour:
   scoreValue: 10
   deathVfx: {fileID: 7744676672056235082, guid: ffc56d132993eba46b4827223f364ea0, type: 3}
   destroyWeaponOnHit: 0
-  fallSpeed: 2
-  horizontalSpeed: 1.5
+  forceUprightRotation: 1
+  postSpawnAlignmentFrames: 1
+  fallSpeed: 0.75
+  horizontalSpeed: 1
   facePlayer: 1
   groundY: 0
   explodeAtHeight: 0.2
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  groundProbeHeight: 1.5
+  groundProbeExtraDistance: 0.5
   explosionRadius: 2
   explosionDamage: 20
   explosionVfx: {fileID: 7744676672056235082, guid: ffc56d132993eba46b4827223f364ea0, type: 3}

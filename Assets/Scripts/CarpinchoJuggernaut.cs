@@ -24,8 +24,6 @@ public class CarpinchoJuggernaut : Enemy
     [Tooltip("Duración del lunge committed (no gira durante este tiempo).")]
     [SerializeField, Min(0.1f)] private float lungeDuration = 0.45f;
     [SerializeField, Min(1f)] private float lungeSpeed = 4f;
-    [SerializeField, Min(0.05f)] private float chargeAnimationSpeed = 0.6f;
-    [SerializeField, Min(0.05f)] private float attackAnimationSpeed = 0.55f;
     [FormerlySerializedAs("damageDistance")]
     [Tooltip("Radio al jugador durante el lunge. Si está dentro, daño.")]
     [SerializeField, Min(0.1f)] private float hitRadius = 1f;
@@ -121,7 +119,6 @@ public class CarpinchoJuggernaut : Enemy
     private void EnterChasing()
     {
         _state = State.Chasing;
-        ResetAnimationSpeed();
         SetWalkingAnimation(true);
         if (_agent != null)
         {
@@ -177,7 +174,7 @@ public class CarpinchoJuggernaut : Enemy
     {
         _state = State.Telegraphing;
         _stateTimer = telegraphDuration;
-        PlayChargeAnimation(chargeAnimationSpeed);
+        PlayChargeAnimation();
         if (_agent != null)
         {
             _agent.ResetPath();
@@ -188,7 +185,7 @@ public class CarpinchoJuggernaut : Enemy
 
     private void TickTelegraphing()
     {
-        PlayChargeAnimation(chargeAnimationSpeed);
+        PlayChargeAnimation();
 
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
@@ -212,7 +209,7 @@ public class CarpinchoJuggernaut : Enemy
         _state = State.Attacking;
         _stateTimer = lungeDuration;
         _hasHitThisAttack = false;
-        PlayMeleeAnimation(attackAnimationSpeed);
+        PlayMeleeAnimation();
 
         if (_agent != null)
         {

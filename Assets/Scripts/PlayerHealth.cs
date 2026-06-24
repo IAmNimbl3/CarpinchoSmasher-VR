@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
 {
+    [Header("Config")]
     [SerializeField, Min(1)] private int maxHealth = 100;
 
     public static PlayerHealth Instance { get; private set; }
@@ -43,6 +44,20 @@ public class PlayerHealth : MonoBehaviour
     public void ResetHealth()
     {
         CurrentHealth = maxHealth;
+        HealthChanged?.Invoke(CurrentHealth, maxHealth);
+    }
+
+    public void SetMaxHealth(int value, bool resetCurrent = true)
+    {
+        maxHealth = Mathf.Max(1, value);
+
+        if (resetCurrent)
+        {
+            ResetHealth();
+            return;
+        }
+
+        CurrentHealth = Mathf.Clamp(CurrentHealth, 0, maxHealth);
         HealthChanged?.Invoke(CurrentHealth, maxHealth);
     }
 

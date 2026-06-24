@@ -13,6 +13,9 @@ public class GameRoundManager : MonoBehaviour
     [SerializeField] private OVRCameraRig cameraRig;
     [SerializeField] private PlayerHealth playerHealth;
 
+    [Header("Player")]
+    [SerializeField, Min(1)] private int playerMaxHealth = 100;
+
     [Header("Round UI")]
     [SerializeField] private bool createRoundUiOnAwake = true;
     [SerializeField, Min(0.25f)] private float uiDistanceFromCamera = 1.4f;
@@ -22,6 +25,10 @@ public class GameRoundManager : MonoBehaviour
     [SerializeField] private Color accentColor = new Color(1f, 0.82f, 0.15f, 0.95f);
     [SerializeField] private bool useControllerRayForRoundUi = true;
     [SerializeField, Min(0.1f)] private float roundUiRayLength = 8f;
+    [SerializeField] private Color roundUiRayColor = new Color(1f, 0.82f, 0.15f, 0.9f);
+    [SerializeField] private Color roundUiRayHoverColor = new Color(0.2f, 0.9f, 1f, 0.95f);
+    [SerializeField] private Color roundUiButtonHoverColor = new Color(0.2f, 0.9f, 1f, 0.95f);
+    [SerializeField, Min(0.001f)] private float roundUiRayWidth = 0.012f;
 
     [Header("Scoring")]
     [SerializeField, Min(0)] private int defaultScorePerKill = 10;
@@ -57,6 +64,12 @@ public class GameRoundManager : MonoBehaviour
 
     private Canvas _healthCanvas;
     private Text _healthText;
+    private LineRenderer _rightRoundRay;
+    private LineRenderer _leftRoundRay;
+    private Material _roundRayMaterial;
+    private readonly Dictionary<Button, Color> _roundButtonBaseColors = new Dictionary<Button, Color>();
+    private readonly HashSet<Button> _hoveredRoundButtons = new HashSet<Button>();
+    private int _appliedPlayerMaxHealth = -1;
 
     public IReadOnlyDictionary<CarpinchoType, int> KillsByType => _killsByType;
 
@@ -155,6 +168,8 @@ public class GameRoundManager : MonoBehaviour
 
         if (_roundCanvas == null || !_roundCanvas.gameObject.activeSelf)
         {
+            SetRoundRayVisualsVisible(false);
+            RestoreRoundButtonHoverColors();
             return;
         }
 
@@ -169,6 +184,8 @@ public class GameRoundManager : MonoBehaviour
             + _cameraAnchor.forward * uiDistanceFromCamera
             + _cameraAnchor.TransformVector(uiOffset);
         canvasTransform.rotation = Quaternion.LookRotation(canvasTransform.position - _cameraAnchor.position, Vector3.up);
+
+        UpdateRoundRayVisuals();
     }
 
     public int GetKills(CarpinchoType type)
@@ -251,7 +268,20 @@ public class GameRoundManager : MonoBehaviour
             playerHealth = gameObject.AddComponent<PlayerHealth>();
         }
 
+        ApplyPlayerHealthConfig();
+
         ResolveCameraAnchor();
+    }
+
+    private void ApplyPlayerHealthConfig()
+    {
+        if (playerHealth == null || _appliedPlayerMaxHealth == playerMaxHealth)
+        {
+            return;
+        }
+
+        playerHealth.SetMaxHealth(playerMaxHealth, _appliedPlayerMaxHealth < 0);
+        _appliedPlayerMaxHealth = playerMaxHealth;
     }
 
     private void ResolveCameraAnchor()
@@ -343,7 +373,32 @@ public class GameRoundManager : MonoBehaviour
             spawner.PauseSpawning();
         }
 
+        CleanupActiveGameplayEntities();
         ShowDefeatUi();
+    }
+
+    private void CleanupActiveGameplayEntities()
+    {
+        if (spawner != null)
+        {
+            spawner.DespawnAll();
+        }
+
+        ClearTrackedEnemies();
+        DestroyActiveProjectiles();
+    }
+
+    private void DestroyActiveProjectiles()
+    {
+        Projectile[] projectiles = FindObjectsByType<Projectile>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        for (int i = 0; i < projectiles.Length; i++)
+        {
+            Projectile projectile = projectiles[i];
+            if (projectile != null)
+            {
+                Destroy(projectile.gameObject);
+            }
+        }
     }
 
     private void ClearTrackedEnemies()
@@ -488,6 +543,9 @@ public class GameRoundManager : MonoBehaviour
         {
             _roundCanvas.gameObject.SetActive(false);
         }
+
+        SetRoundRayVisualsVisible(false);
+        RestoreRoundButtonHoverColors();
     }
 
     private void CreateRoundUi()
@@ -630,22 +688,28 @@ public class GameRoundManager : MonoBehaviour
             return false;
         }
 
-        if (TryClickRoundUiWithController(OVRInput.Controller.RTouch, OVRInput.Button.SecondaryIndexTrigger, GetRightControllerRayTransform()))
+        if (TryClickRoundUiWithControllerIndex(OVRInput.Controller.RTouch, GetRightControllerRayTransform()))
         {
             return true;
         }
 
-        return TryClickRoundUiWithController(OVRInput.Controller.LTouch, OVRInput.Button.PrimaryIndexTrigger, GetLeftControllerRayTransform());
+        return TryClickRoundUiWithControllerIndex(OVRInput.Controller.LTouch, GetLeftControllerRayTransform());
     }
 
-    private bool TryClickRoundUiWithController(OVRInput.Controller controller, OVRInput.Button button, Transform rayTransform)
+    private bool TryClickRoundUiWithControllerIndex(OVRInput.Controller controller, Transform rayTransform)
     {
-        if (rayTransform == null || !OVRInput.GetDown(button, controller))
+        if (!OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, controller)
+            && !OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger, controller))
         {
             return false;
         }
 
-        Button targetButton = FindRoundButtonUnderRay(rayTransform.position, rayTransform.forward);
+        if (!TryGetControllerRay(controller, rayTransform, out Vector3 origin, out Vector3 direction))
+        {
+            return false;
+        }
+
+        Button targetButton = FindRoundButtonUnderRay(origin, direction);
         if (targetButton == null || !targetButton.IsInteractable())
         {
             return false;
@@ -695,6 +759,179 @@ public class GameRoundManager : MonoBehaviour
         }
 
         return firstButton;
+    }
+
+    private void UpdateRoundRayVisuals()
+    {
+        if (!useControllerRayForRoundUi || _roundCanvas == null || !_roundCanvas.gameObject.activeSelf)
+        {
+            SetRoundRayVisualsVisible(false);
+            RestoreRoundButtonHoverColors();
+            return;
+        }
+
+        RestoreRoundButtonHoverColors();
+        EnsureRoundRayVisuals();
+        UpdateRoundRayVisual(_rightRoundRay, OVRInput.Controller.RTouch, GetRightControllerRayTransform());
+        UpdateRoundRayVisual(_leftRoundRay, OVRInput.Controller.LTouch, GetLeftControllerRayTransform());
+    }
+
+    private void UpdateRoundRayVisual(LineRenderer rayVisual, OVRInput.Controller controller, Transform fallbackTransform)
+    {
+        if (rayVisual == null || !TryGetControllerRay(controller, fallbackTransform, out Vector3 origin, out Vector3 direction))
+        {
+            if (rayVisual != null)
+            {
+                rayVisual.enabled = false;
+            }
+
+            return;
+        }
+
+        Button hoveredButton = FindRoundButtonUnderRay(origin, direction);
+        Vector3 end = origin + direction.normalized * roundUiRayLength;
+
+        if (_roundCanvasRect != null)
+        {
+            Plane canvasPlane = new Plane(_roundCanvas.transform.forward, _roundCanvas.transform.position);
+            Ray ray = new Ray(origin, direction.normalized);
+            if (canvasPlane.Raycast(ray, out float distance) && distance > 0f && distance <= roundUiRayLength)
+            {
+                end = ray.GetPoint(distance);
+            }
+        }
+
+        rayVisual.enabled = true;
+        rayVisual.startColor = hoveredButton != null ? roundUiRayHoverColor : roundUiRayColor;
+        rayVisual.endColor = hoveredButton != null ? roundUiRayHoverColor : roundUiRayColor;
+        rayVisual.SetPosition(0, origin);
+        rayVisual.SetPosition(1, end);
+
+        if (hoveredButton != null)
+        {
+            SetRoundButtonHovered(hoveredButton);
+        }
+    }
+
+    private bool TryGetControllerRay(OVRInput.Controller controller, Transform fallbackTransform, out Vector3 origin, out Vector3 direction)
+    {
+        ResolveReferences();
+
+        bool controllerConnected = (OVRInput.GetConnectedControllers() & controller) == controller;
+        Vector3 localPosition = controllerConnected ? OVRInput.GetLocalControllerPosition(controller) : Vector3.zero;
+        Quaternion localRotation = controllerConnected ? OVRInput.GetLocalControllerRotation(controller) : Quaternion.identity;
+        bool hasPose = controllerConnected;
+
+        if (hasPose && cameraRig != null && cameraRig.trackingSpace != null)
+        {
+            origin = cameraRig.trackingSpace.TransformPoint(localPosition);
+            direction = cameraRig.trackingSpace.rotation * (localRotation * Vector3.forward);
+            return direction.sqrMagnitude > 0.0001f;
+        }
+
+        if (fallbackTransform != null)
+        {
+            origin = fallbackTransform.position;
+            direction = fallbackTransform.forward;
+            return direction.sqrMagnitude > 0.0001f;
+        }
+
+        origin = Vector3.zero;
+        direction = Vector3.forward;
+        return false;
+    }
+
+    private void EnsureRoundRayVisuals()
+    {
+        if (_rightRoundRay == null)
+        {
+            _rightRoundRay = CreateRoundRayVisual("Right_RoundUi_Ray");
+        }
+
+        if (_leftRoundRay == null)
+        {
+            _leftRoundRay = CreateRoundRayVisual("Left_RoundUi_Ray");
+        }
+    }
+
+    private LineRenderer CreateRoundRayVisual(string objectName)
+    {
+        GameObject rayObject = new GameObject(objectName);
+        rayObject.transform.SetParent(transform, false);
+
+        LineRenderer lineRenderer = rayObject.AddComponent<LineRenderer>();
+        lineRenderer.useWorldSpace = true;
+        lineRenderer.positionCount = 2;
+        lineRenderer.widthMultiplier = roundUiRayWidth;
+        lineRenderer.numCapVertices = 6;
+        lineRenderer.numCornerVertices = 2;
+        lineRenderer.material = GetRoundRayMaterial();
+        lineRenderer.startColor = roundUiRayColor;
+        lineRenderer.endColor = roundUiRayColor;
+        lineRenderer.enabled = false;
+        return lineRenderer;
+    }
+
+    private Material GetRoundRayMaterial()
+    {
+        if (_roundRayMaterial != null)
+        {
+            return _roundRayMaterial;
+        }
+
+        Shader shader = Shader.Find("Sprites/Default") ?? Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Standard");
+        _roundRayMaterial = new Material(shader)
+        {
+            name = "Runtime_RoundUiRay"
+        };
+        return _roundRayMaterial;
+    }
+
+    private void SetRoundRayVisualsVisible(bool visible)
+    {
+        if (_rightRoundRay != null)
+        {
+            _rightRoundRay.enabled = visible;
+        }
+
+        if (_leftRoundRay != null)
+        {
+            _leftRoundRay.enabled = visible;
+        }
+    }
+
+    private void SetRoundButtonHovered(Button button)
+    {
+        if (button == null || button.targetGraphic == null)
+        {
+            return;
+        }
+
+        if (!_roundButtonBaseColors.ContainsKey(button))
+        {
+            _roundButtonBaseColors[button] = button.targetGraphic.color;
+        }
+
+        button.targetGraphic.color = roundUiButtonHoverColor;
+        _hoveredRoundButtons.Add(button);
+    }
+
+    private void RestoreRoundButtonHoverColors()
+    {
+        foreach (Button button in _hoveredRoundButtons)
+        {
+            if (button == null || button.targetGraphic == null)
+            {
+                continue;
+            }
+
+            if (_roundButtonBaseColors.TryGetValue(button, out Color baseColor))
+            {
+                button.targetGraphic.color = baseColor;
+            }
+        }
+
+        _hoveredRoundButtons.Clear();
     }
 
     private Transform GetRightControllerRayTransform()
@@ -780,6 +1017,8 @@ public class GameRoundManager : MonoBehaviour
     {
         Image buttonImage = CreateImage(objectName, parent, accentColor);
         Button button = buttonImage.gameObject.AddComponent<Button>();
+        button.targetGraphic = buttonImage;
+        _roundButtonBaseColors[button] = buttonImage.color;
 
         Text labelText = CreateText("Label", buttonImage.transform, label, 24, TextAnchor.MiddleCenter);
         labelText.color = Color.black;
