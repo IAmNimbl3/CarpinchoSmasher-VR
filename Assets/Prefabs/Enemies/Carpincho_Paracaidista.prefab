@@ -77,6 +77,12 @@ MonoBehaviour:
   fallSpeed: 0.75
   horizontalSpeed: 1
   facePlayer: 1
+  usePlayerRelativeLandingZones: 1
+  landingZoneDistance: 1.65
+  landingZoneLateralRadius: 0.6
+  landingZoneForwardRadius: 0.35
+  spawnAboveLandingZone: 1
+  landingSpawnHeight: 20
   groundY: 0
   explodeAtHeight: 0.2
   groundMask:
@@ -84,7 +90,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   groundProbeHeight: 1.5
   groundProbeExtraDistance: 0.5
-  explosionRadius: 2
+  explosionRadius: 2.4
   explosionDamage: 20
   explosionVfx: {fileID: 7744676672056235082, guid: ffc56d132993eba46b4827223f364ea0, type: 3}
 --- !u!1001 &845255103279134902

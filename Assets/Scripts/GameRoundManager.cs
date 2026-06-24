@@ -34,6 +34,10 @@ public class GameRoundManager : MonoBehaviour
     [Header("Round Countdown")]
     [SerializeField, Min(1)] private int countdownStartNumber = 3;
     [SerializeField, Min(0.05f)] private float countdownStepDuration = 0.55f;
+    [SerializeField] private Vector2 countdownUiSize = new Vector2(360f, 220f);
+    [SerializeField, Min(0.25f)] private float countdownDistanceFromCamera = 1.25f;
+    [SerializeField] private Vector3 countdownOffset = Vector3.zero;
+    [SerializeField] private Color countdownPanelColor = new Color(0f, 0f, 0f, 0.28f);
 
     [Header("Scoring")]
     [SerializeField, Min(0)] private int defaultScorePerKill = 10;
@@ -67,6 +71,9 @@ public class GameRoundManager : MonoBehaviour
     private Text _bodyText;
     private Button _continueButton;
     private Button _secondaryButton;
+    private Canvas _countdownCanvas;
+    private RectTransform _countdownCanvasRect;
+    private Text _countdownText;
     private Transform _cameraAnchor;
 
     private Canvas _healthCanvas;
@@ -88,6 +95,7 @@ public class GameRoundManager : MonoBehaviour
         if (createRoundUiOnAwake)
         {
             CreateRoundUi();
+            CreateCountdownUi();
         }
 
         if (createHealthHudOnAwake)
@@ -182,6 +190,7 @@ public class GameRoundManager : MonoBehaviour
         {
             SetRoundRayVisualsVisible(false);
             RestoreRoundButtonHoverColors();
+            UpdateCountdownCanvasTransform();
             return;
         }
 
@@ -201,9 +210,11 @@ public class GameRoundManager : MonoBehaviour
         {
             SetRoundRayVisualsVisible(false);
             RestoreRoundButtonHoverColors();
+            UpdateCountdownCanvasTransform();
             return;
         }
 
+        UpdateCountdownCanvasTransform();
         UpdateRoundRayVisuals();
     }
 
@@ -457,7 +468,7 @@ public class GameRoundManager : MonoBehaviour
         _roundCountdownActive = true;
         RestoreRoundButtonHoverColors();
         SetRoundRayVisualsVisible(false);
-        ShowCountdownUi(countdownStartNumber);
+        HideRoundUi();
 
         for (int value = countdownStartNumber; value > 0; value--)
         {
@@ -467,37 +478,34 @@ public class GameRoundManager : MonoBehaviour
 
         _roundCountdownActive = false;
         _roundCountdownCoroutine = null;
+        HideCountdownUi();
         HideRoundUi();
         onComplete?.Invoke();
     }
 
     private void ShowCountdownUi(int value)
     {
-        if (_roundCanvas == null)
+        if (_countdownCanvas == null)
         {
-            CreateRoundUi();
+            CreateCountdownUi();
         }
 
-        if (_roundCanvas == null)
+        if (_countdownCanvas == null)
         {
             return;
         }
 
-        _titleText.text = value.ToString();
-        _titleText.fontSize = 96;
-        _bodyText.text = string.Empty;
+        _countdownText.text = value.ToString();
+        _countdownCanvas.gameObject.SetActive(true);
+        UpdateCountdownCanvasTransform();
+    }
 
-        if (_continueButton != null)
+    private void HideCountdownUi()
+    {
+        if (_countdownCanvas != null)
         {
-            _continueButton.gameObject.SetActive(false);
+            _countdownCanvas.gameObject.SetActive(false);
         }
-
-        if (_secondaryButton != null)
-        {
-            _secondaryButton.gameObject.SetActive(false);
-        }
-
-        _roundCanvas.gameObject.SetActive(true);
     }
 
     private void TryShowPendingRoundComplete()
@@ -638,6 +646,62 @@ public class GameRoundManager : MonoBehaviour
 
         SetRoundRayVisualsVisible(false);
         RestoreRoundButtonHoverColors();
+    }
+
+    private void CreateCountdownUi()
+    {
+        if (_countdownCanvas != null)
+        {
+            return;
+        }
+
+        GameObject canvasObject = new GameObject("Round_Countdown_Canvas");
+        canvasObject.transform.SetParent(transform, false);
+
+        _countdownCanvas = canvasObject.AddComponent<Canvas>();
+        _countdownCanvas.renderMode = RenderMode.WorldSpace;
+        _countdownCanvas.sortingOrder = 30;
+        _countdownCanvas.worldCamera = ResolveHudCamera();
+
+        _countdownCanvasRect = canvasObject.GetComponent<RectTransform>();
+        _countdownCanvasRect.sizeDelta = countdownUiSize;
+        _countdownCanvasRect.localScale = Vector3.one * 0.0016f;
+
+        Image panel = CreateImage("Panel", _countdownCanvasRect, countdownPanelColor);
+        RectTransform panelRect = panel.rectTransform;
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+
+        _countdownText = CreateText("CountdownText", _countdownCanvasRect, "3", 120, TextAnchor.MiddleCenter);
+        RectTransform textRect = _countdownText.rectTransform;
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+
+        _countdownCanvas.gameObject.SetActive(false);
+    }
+
+    private void UpdateCountdownCanvasTransform()
+    {
+        if (_countdownCanvas == null || !_countdownCanvas.gameObject.activeSelf)
+        {
+            return;
+        }
+
+        ResolveCameraAnchor();
+        if (_cameraAnchor == null)
+        {
+            return;
+        }
+
+        Transform canvasTransform = _countdownCanvas.transform;
+        canvasTransform.position = _cameraAnchor.position
+            + _cameraAnchor.forward * countdownDistanceFromCamera
+            + _cameraAnchor.TransformVector(countdownOffset);
+        canvasTransform.rotation = Quaternion.LookRotation(canvasTransform.position - _cameraAnchor.position, Vector3.up);
     }
 
     private void CreateRoundUi()

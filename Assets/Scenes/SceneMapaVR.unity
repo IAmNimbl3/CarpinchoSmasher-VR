@@ -24801,20 +24801,20 @@ MonoBehaviour:
     startTime: 0
     spawnInterval: 3
     maxAlive: 3
-    allowedTypes: 0000000002000000
+    allowedTypes: 0200000000000000
   - label: "2 \xB7 Aire (30s-2m)"
     startTime: 30
-    spawnInterval: 2
+    spawnInterval: 5
     maxAlive: 5
     allowedTypes: 000000000200000001000000
   - label: "3 \xB7 Tanque (2m-3:30)"
     startTime: 120
-    spawnInterval: 1.5
+    spawnInterval: 5
     maxAlive: 7
     allowedTypes: 00000000020000000100000003000000
   - label: "4 \xB7 Caos (3:30+)"
     startTime: 210
-    spawnInterval: 1
+    spawnInterval: 3
     maxAlive: 10
     allowedTypes: 00000000020000000100000003000000
   autoStart: 1
@@ -29820,7 +29820,14 @@ MonoBehaviour:
   roundUiRayLength: 8
   roundUiRayColor: {r: 1, g: 0.82, b: 0.15, a: 0.9}
   roundUiRayHoverColor: {r: 0.2, g: 0.9, b: 1, a: 0.95}
+  roundUiButtonHoverColor: {r: 0.2, g: 0.9, b: 1, a: 0.95}
   roundUiRayWidth: 0.012
+  countdownStartNumber: 3
+  countdownStepDuration: 0.55
+  countdownUiSize: {x: 360, y: 220}
+  countdownDistanceFromCamera: 1.25
+  countdownOffset: {x: 0, y: 0, z: 0}
+  countdownPanelColor: {r: 0, g: 0, b: 0, a: 0.28}
   defaultScorePerKill: 10
   menuSceneName: Sample Optimizada
   createHealthHudOnAwake: 1

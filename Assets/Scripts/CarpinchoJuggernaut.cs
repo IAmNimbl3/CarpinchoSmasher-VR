@@ -16,7 +16,7 @@ public class CarpinchoJuggernaut : Enemy
     [SerializeField, Min(1f)] private float chaseSpeed = 1f;
     [SerializeField, Min(0.1f)] private float repathInterval = 0.5f;
     [Tooltip("Distancia al jugador a la que se frena para atacar. Bajala para que se acerque mas; subila para dar mas margen al martillo.")]
-    [SerializeField, Min(0.3f)] private float meleeRange = 1.2f;
+    [SerializeField, Min(0.3f)] private float meleeRange = 1.35f;
 
     [Header("Juggernaut · Telegraph + Lunge")]
     [Tooltip("Duración del casteo antes del lunge. Más largo = más tiempo para reaccionar.")]

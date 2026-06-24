@@ -78,7 +78,7 @@ MonoBehaviour:
   postSpawnAlignmentFrames: 1
   chaseSpeed: 1
   repathInterval: 0.5
-  meleeRange: 1.2
+  meleeRange: 1.35
   telegraphDuration: 0.8
   lungeDuration: 0.45
   lungeSpeed: 4

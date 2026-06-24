@@ -20,8 +20,10 @@ public class CarpinchoParacaidista : Enemy
     [SerializeField, Min(0f)] private float landingZoneLateralRadius = 0.6f;
     [Tooltip("Variacion aleatoria adelante/atras alrededor del centro de la zona.")]
     [SerializeField, Min(0f)] private float landingZoneForwardRadius = 0.35f;
-    [Tooltip("Si esta activo, el punto de spawn se reposiciona sobre la zona elegida conservando la altura.")]
+    [Tooltip("Si esta activo, el punto de spawn se reposiciona sobre la zona elegida usando Landing Spawn Height.")]
     [SerializeField] private bool spawnAboveLandingZone = true;
+    [Tooltip("Altura desde la que aparece sobre el suelo cuando usa zonas de caida.")]
+    [SerializeField, Min(0.5f)] private float landingSpawnHeight = 5.5f;
 
     [Header("Impacto en suelo")]
     [Tooltip("Y del suelo de la arena.")]
@@ -41,6 +43,7 @@ public class CarpinchoParacaidista : Enemy
 
     private bool _exploded;
     private Vector3 _landingTarget;
+    private Vector3 _landingFacingDirection;
     private bool _hasLandingTarget;
 
     public override CarpinchoType Type => CarpinchoType.Paracaidista;
@@ -53,7 +56,12 @@ public class CarpinchoParacaidista : Enemy
 
         if (spawnAboveLandingZone && _hasLandingTarget)
         {
-            transform.position = new Vector3(_landingTarget.x, transform.position.y, _landingTarget.z);
+            transform.position = new Vector3(_landingTarget.x, groundY + landingSpawnHeight, _landingTarget.z);
+        }
+
+        if (_hasLandingTarget && _landingFacingDirection.sqrMagnitude > 0.0001f)
+        {
+            transform.rotation = Quaternion.LookRotation(_landingFacingDirection);
         }
     }
 
@@ -94,13 +102,9 @@ public class CarpinchoParacaidista : Enemy
             }
         }
 
-        if (facePlayer && _hasLandingTarget && PlayerTarget.TryGetPosition(out Vector3 lookPlayerPos))
+        if (facePlayer && _hasLandingTarget && _landingFacingDirection.sqrMagnitude > 0.0001f)
         {
-            Vector3 lookDir = new Vector3(lookPlayerPos.x - position.x, 0f, lookPlayerPos.z - position.z);
-            if (lookDir.sqrMagnitude > 0.0001f)
-            {
-                transform.rotation = Quaternion.LookRotation(lookDir);
-            }
+            transform.rotation = Quaternion.LookRotation(_landingFacingDirection);
         }
 
         transform.position = position;
@@ -148,16 +152,8 @@ public class CarpinchoParacaidista : Enemy
             Instantiate(explosionVfx, transform.position, Quaternion.identity);
         }
 
-        if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
-        {
-            float distance = Vector3.Distance(transform.position, playerPos);
-            if (distance <= explosionRadius)
-            {
-                PlayerHealth.TryDamage(explosionDamage, this);
-                // TODO: enganchar con PlayerHealth cuando se decida sistema de daÃ±o (GDD Â§9 TBD).
-                Debug.Log($"[Paracaidista] Player dentro del radio de explosiÃ³n ({distance:F2}m / {explosionRadius:F2}m). DaÃ±o: {explosionDamage}.", this);
-            }
-        }
+        PlayerHealth.TryDamage(explosionDamage, this);
+        Debug.Log($"[Paracaidista] Impacto en suelo. Dano al jugador: {explosionDamage}.", this);
 
         Die();
     }
@@ -165,6 +161,7 @@ public class CarpinchoParacaidista : Enemy
     private void PickLandingTarget()
     {
         _hasLandingTarget = false;
+        _landingFacingDirection = Vector3.forward;
 
         if (!usePlayerRelativeLandingZones || !PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
@@ -180,6 +177,7 @@ public class CarpinchoParacaidista : Enemy
         Vector3 offset = forward * (frontOrBack * landingZoneDistance + forwardJitter)
             + right * lateralJitter;
         _landingTarget = new Vector3(playerPos.x + offset.x, groundY, playerPos.z + offset.z);
+        _landingFacingDirection = (forward * frontOrBack).normalized;
         _hasLandingTarget = true;
     }
 
