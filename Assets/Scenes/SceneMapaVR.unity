@@ -29815,6 +29815,8 @@ MonoBehaviour:
   uiSize: {x: 700, y: 340}
   panelColor: {r: 0.2528302, g: 0.2528302, b: 0.2528302, a: 0.58}
   accentColor: {r: 1, g: 0.702432, b: 0.1490196, a: 0.95}
+  useControllerRayForRoundUi: 1
+  roundUiRayLength: 8
   defaultScorePerKill: 10
   menuSceneName: Sample Optimizada
   createHealthHudOnAwake: 1
