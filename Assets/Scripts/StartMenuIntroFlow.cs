@@ -6,6 +6,7 @@ public class StartMenuIntroFlow : MonoBehaviour
     [Header("Rig")]
     [SerializeField] private OVRCameraRig cameraRig;
     [SerializeField] private Transform centerEyeAnchor;
+    [SerializeField] private PlayerBounds playerBounds;
 
     [Header("Intro")]
     [SerializeField] private Transform initialSpawnPoint;
@@ -22,6 +23,7 @@ public class StartMenuIntroFlow : MonoBehaviour
     private IEnumerator Start()
     {
         ResolveRigReferences();
+        ConfigurePlayerBounds();
 
         if (tvMenuRoot != null)
         {
@@ -31,7 +33,8 @@ public class StartMenuIntroFlow : MonoBehaviour
         yield return null;
 
         ResolveRigReferences();
-        MoveRigEyeTo(initialSpawnPoint);
+        ConfigurePlayerBounds();
+        MoveRigTo(initialSpawnPoint);
     }
 
     private void Update()
@@ -80,26 +83,37 @@ public class StartMenuIntroFlow : MonoBehaviour
         {
             centerEyeAnchor = cameraRig.centerEyeAnchor;
         }
+
+        if (playerBounds == null && cameraRig != null)
+        {
+            playerBounds = cameraRig.GetComponent<PlayerBounds>();
+        }
     }
 
-    private void MoveRigEyeTo(Transform target)
+    private void ConfigurePlayerBounds()
     {
-        if (cameraRig == null || centerEyeAnchor == null || target == null)
+        if (playerBounds != null && initialSpawnPoint != null)
+        {
+            playerBounds.SetSpawnPoint(initialSpawnPoint);
+        }
+    }
+
+    private void MoveRigTo(Transform target)
+    {
+        if (cameraRig == null || target == null)
         {
             return;
         }
 
         Transform rigTransform = cameraRig.transform;
-        Vector3 eyeForward = Vector3.ProjectOnPlane(centerEyeAnchor.forward, Vector3.up).normalized;
         Vector3 targetForward = Vector3.ProjectOnPlane(target.forward, Vector3.up).normalized;
-
-        if (eyeForward.sqrMagnitude > 0.001f && targetForward.sqrMagnitude > 0.001f)
+        if (targetForward.sqrMagnitude < 0.001f)
         {
-            float yawDelta = Vector3.SignedAngle(eyeForward, targetForward, Vector3.up);
-            rigTransform.RotateAround(centerEyeAnchor.position, Vector3.up, yawDelta);
+            targetForward = Vector3.forward;
         }
 
-        Vector3 eyeOffsetFromRig = centerEyeAnchor.position - rigTransform.position;
-        rigTransform.position = target.position - eyeOffsetFromRig;
+        rigTransform.SetPositionAndRotation(
+            target.position,
+            Quaternion.LookRotation(targetForward, Vector3.up));
     }
 }
