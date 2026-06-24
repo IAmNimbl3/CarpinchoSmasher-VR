@@ -99,6 +99,7 @@ public class CarpinchoSniper : Enemy
     private void EnterRepositioning()
     {
         _state = State.Repositioning;
+        SetWalkingAnimation(true);
         if (_agent != null)
         {
             _agent.isStopped = false;
@@ -169,6 +170,7 @@ public class CarpinchoSniper : Enemy
     {
         _state = State.Aiming;
         _stateTimer = aimDuration;
+        PlayChargeAnimation();
         if (_agent != null)
         {
             _agent.ResetPath();
@@ -179,6 +181,8 @@ public class CarpinchoSniper : Enemy
 
     private void TickAiming()
     {
+        PlayChargeAnimation();
+
         if (!PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
             EnterRepositioning();
@@ -208,6 +212,8 @@ public class CarpinchoSniper : Enemy
 
     private void Shoot(Vector3 playerPos)
     {
+        PlayShootAnimation();
+
         if (projectilePrefab != null)
         {
             Vector3 origin = GetMuzzlePosition();

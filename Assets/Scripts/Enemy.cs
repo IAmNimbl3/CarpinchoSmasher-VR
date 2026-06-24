@@ -12,6 +12,14 @@ public enum CarpinchoType
 
 public class Enemy : MonoBehaviour
 {
+    private static readonly int IsWalkingParameter = Animator.StringToHash("IsWalking");
+    private static readonly int MeleeParameter = Animator.StringToHash("Melee");
+    private static readonly int ShootParameter = Animator.StringToHash("Shoot");
+    private static readonly int IdleState = Animator.StringToHash("Idle");
+    private static readonly int ChargeState = Animator.StringToHash("Charge Shoot");
+    private static readonly int MeleeState = Animator.StringToHash("Melee Attack");
+    private static readonly int ShootState = Animator.StringToHash("Shoot");
+
     [Header("Identity")]
     [Tooltip("Solo se usa cuando esta clase base se instancia directamente. Las subclases (CarpinchoSniper, etc.) sobrescriben este valor.")]
     [SerializeField] private CarpinchoType type = CarpinchoType.Sniper;
@@ -30,11 +38,17 @@ public class Enemy : MonoBehaviour
     public event Action<Enemy> Died;
 
     private Rigidbody _rigidbody;
+    private Animator _animator;
+    private bool _hasWalkingParameter;
+    private bool _hasMeleeParameter;
+    private bool _hasShootParameter;
     private bool _isDead;
 
     protected virtual void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
+        _animator = GetComponentInChildren<Animator>(true);
+        CacheAnimatorParameters();
     }
 
     public virtual void OnSpawned(Vector3 position, Quaternion rotation)
@@ -49,6 +63,8 @@ public class Enemy : MonoBehaviour
 
         _isDead = false;
         gameObject.SetActive(true);
+
+        ResetAnimation();
     }
 
     public virtual void OnDespawned()
@@ -111,5 +127,103 @@ public class Enemy : MonoBehaviour
 
         Die();
         return true;
+    }
+
+    protected void SetWalkingAnimation(bool isWalking)
+    {
+        if (_animator == null || !_hasWalkingParameter)
+        {
+            return;
+        }
+
+        _animator.SetBool(IsWalkingParameter, isWalking);
+    }
+
+    protected void PlayIdleAnimation()
+    {
+        SetWalkingAnimation(false);
+        PlayStateIfAvailable(IdleState, 0.08f);
+    }
+
+    protected void PlayChargeAnimation()
+    {
+        SetWalkingAnimation(false);
+        PlayStateIfAvailable(ChargeState, 0.06f);
+    }
+
+    protected void PlayMeleeAnimation()
+    {
+        SetWalkingAnimation(false);
+        if (_animator != null && _hasMeleeParameter)
+        {
+            _animator.SetTrigger(MeleeParameter);
+        }
+
+        PlayStateIfAvailable(MeleeState, 0.04f);
+    }
+
+    protected void PlayShootAnimation()
+    {
+        SetWalkingAnimation(false);
+        if (_animator != null && _hasShootParameter)
+        {
+            _animator.ResetTrigger(ShootParameter);
+        }
+
+        PlayStateIfAvailable(ShootState, 0.02f);
+    }
+
+    private void ResetAnimation()
+    {
+        if (_animator == null)
+        {
+            return;
+        }
+
+        _animator.Rebind();
+        _animator.Update(0f);
+    }
+
+    private void PlayStateIfAvailable(int stateHash, float transitionDuration)
+    {
+        if (_animator == null || !_animator.HasState(0, stateHash))
+        {
+            return;
+        }
+
+        AnimatorStateInfo current = _animator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo next = _animator.GetNextAnimatorStateInfo(0);
+        if (current.shortNameHash == stateHash || next.shortNameHash == stateHash)
+        {
+            return;
+        }
+
+        _animator.CrossFadeInFixedTime(stateHash, transitionDuration, 0);
+    }
+
+    private void CacheAnimatorParameters()
+    {
+        if (_animator == null)
+        {
+            return;
+        }
+
+        AnimatorControllerParameter[] parameters = _animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            AnimatorControllerParameter parameter = parameters[i];
+            if (parameter.nameHash == IsWalkingParameter && parameter.type == AnimatorControllerParameterType.Bool)
+            {
+                _hasWalkingParameter = true;
+            }
+            else if (parameter.nameHash == MeleeParameter && parameter.type == AnimatorControllerParameterType.Trigger)
+            {
+                _hasMeleeParameter = true;
+            }
+            else if (parameter.nameHash == ShootParameter && parameter.type == AnimatorControllerParameterType.Trigger)
+            {
+                _hasShootParameter = true;
+            }
+        }
     }
 }

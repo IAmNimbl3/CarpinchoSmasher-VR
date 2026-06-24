@@ -99,6 +99,7 @@ public class CarpinchoVelocista : Enemy
     private void EnterChasing()
     {
         _state = State.Chasing;
+        SetWalkingAnimation(true);
         if (_agent != null)
         {
             _agent.isStopped = false;
@@ -139,6 +140,7 @@ public class CarpinchoVelocista : Enemy
     {
         _state = State.Telegraphing;
         _stateTimer = telegraphDuration;
+        PlayChargeAnimation();
         if (_agent != null)
         {
             _agent.ResetPath();
@@ -150,6 +152,8 @@ public class CarpinchoVelocista : Enemy
 
     private void TickTelegraphing()
     {
+        PlayChargeAnimation();
+
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
             Vector3 look = playerPos - transform.position;
@@ -171,6 +175,7 @@ public class CarpinchoVelocista : Enemy
     {
         _state = State.Attacking;
         _stateTimer = lungeDuration;
+        PlayMeleeAnimation();
 
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
