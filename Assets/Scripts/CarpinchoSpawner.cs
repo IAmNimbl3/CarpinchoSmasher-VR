@@ -88,6 +88,8 @@ public class CarpinchoSpawner : MonoBehaviour
     public int CurrentPhaseIndex => _phaseIndex;
     public float ElapsedTime => _elapsedTime;
     public bool IsRunning => _running;
+    public bool IsPaused => _paused;
+    public int PhaseCount => phases != null ? phases.Length : 0;
 
     private readonly Dictionary<CarpinchoType, EnemyPool> _poolsByType = new Dictionary<CarpinchoType, EnemyPool>();
     private readonly List<Enemy> _aliveEnemies = new List<Enemy>();
@@ -96,6 +98,7 @@ public class CarpinchoSpawner : MonoBehaviour
     private float _elapsedTime;
     private float _nextSpawnAt;
     private bool _running;
+    private bool _paused;
     private int _phaseIndex = -1;
 
     private void Awake()
@@ -132,6 +135,7 @@ public class CarpinchoSpawner : MonoBehaviour
     public void BeginSpawning()
     {
         _running = true;
+        _paused = false;
         _elapsedTime = 0f;
         _nextSpawnAt = 0f;
         _phaseIndex = -1;
@@ -140,6 +144,38 @@ public class CarpinchoSpawner : MonoBehaviour
     public void StopSpawning()
     {
         _running = false;
+        _paused = false;
+    }
+
+    public void PauseSpawning()
+    {
+        if (!_running)
+        {
+            return;
+        }
+
+        _paused = true;
+    }
+
+    public void ResumeSpawning()
+    {
+        if (!_running)
+        {
+            return;
+        }
+
+        _paused = false;
+        _nextSpawnAt = Mathf.Max(_nextSpawnAt, _elapsedTime);
+    }
+
+    public string GetPhaseLabel(int phaseIndex)
+    {
+        if (phases == null || phaseIndex < 0 || phaseIndex >= phases.Length)
+        {
+            return string.Empty;
+        }
+
+        return phases[phaseIndex] != null ? phases[phaseIndex].label : string.Empty;
     }
 
     public void DespawnAll()
@@ -158,13 +194,18 @@ public class CarpinchoSpawner : MonoBehaviour
 
     private void Update()
     {
-        if (!_running)
+        if (!_running || _paused)
         {
             return;
         }
 
         _elapsedTime += Time.deltaTime;
         UpdatePhase();
+
+        if (_paused)
+        {
+            return;
+        }
 
         SpawnPhase phase = CurrentPhase;
         if (phase == null)

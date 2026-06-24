@@ -722,6 +722,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThrownHammer
   launchedLifetime: 3
+  handTransferGracePeriod: 1.4
   useGravityWhenLaunched: 1
   launchedBounciness: 0.45
   launchedDynamicFriction: 0.15
@@ -788,5 +789,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeshOutlineHighlighter
   outlineColor: {r: 0, g: 1, b: 0.9909947, a: 0.69803923}
-  outlineWidth: 0.015
+  outlineWidth: 0.02
   outlineMaterial: {fileID: 0}

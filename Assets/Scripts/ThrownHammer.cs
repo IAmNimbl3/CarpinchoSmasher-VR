@@ -52,6 +52,7 @@ public class ThrownHammer : MonoBehaviour
     private OVRCameraRig _cameraRig;
     private Transform _leftControllerAnchor;
     private Transform _rightControllerAnchor;
+    private Transform _highlightedController;
     private bool _gripHighlightsVisible;
     private bool _holsteredGripAreaInflated;
     private bool _releaseNotified;
@@ -123,6 +124,7 @@ public class ThrownHammer : MonoBehaviour
         _launchedTimer = 0f;
         _launchVelocityTuneFrames = 0;
         _wasSelected = false;
+        _highlightedController = null;
 
         ConfigureRigidbody(isKinematic: true, useGravity: false);
         SetColliders(enabled: true, forceTrigger: true);
@@ -146,12 +148,13 @@ public class ThrownHammer : MonoBehaviour
 
         if (_state == HammerState.Holstered && snapGripToNearestControllerOnGrab)
         {
-            SnapGripAnchorToNearestController();
+            SnapGripAnchorToController(_highlightedController);
         }
 
         _state = HammerState.Held;
         CancelPendingRelease();
         _releaseNotified = false;
+        _highlightedController = null;
         _launchedTimer = 0f;
         _launchVelocityTuneFrames = 0;
         SetGripHighlightsVisible(false);
@@ -495,9 +498,16 @@ public class ThrownHammer : MonoBehaviour
         _rightControllerAnchor = _cameraRig.rightHandAnchor;
     }
 
-    private void SnapGripAnchorToNearestController()
+    private void SnapGripAnchorToController(Transform preferredController)
     {
-        if (gripAnchor == null || !TryGetClosestControllerToGrip(out Transform controllerAnchor, out _, snapActivationDistance))
+        if (gripAnchor == null)
+        {
+            return;
+        }
+
+        Transform controllerAnchor = preferredController;
+        if (controllerAnchor == null
+            && !TryGetClosestControllerToGrip(out controllerAnchor, out _, snapActivationDistance))
         {
             return;
         }
@@ -511,11 +521,18 @@ public class ThrownHammer : MonoBehaviour
     {
         if (!showGripAreaHighlight || _state != HammerState.Holstered)
         {
+            _highlightedController = null;
             SetGripHighlightsVisible(false);
             return;
         }
 
-        bool controllerIsNearGrip = TryGetClosestControllerToGrip(out _, out _, highlightActivationDistance);
+        float effectiveHighlightDistance = Mathf.Min(highlightActivationDistance, snapActivationDistance);
+        bool controllerIsNearGrip = TryGetClosestControllerToGrip(
+            out Transform controllerAnchor,
+            out _,
+            effectiveHighlightDistance);
+
+        _highlightedController = controllerIsNearGrip ? controllerAnchor : null;
         SetGripHighlightsVisible(controllerIsNearGrip);
     }
 
