@@ -14873,7 +14873,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6147449420076126351, guid: 0a7d2469f24041c4284c66706f84c45e, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6254896920830494281, guid: 0a7d2469f24041c4284c66706f84c45e, type: 3}
       propertyPath: m_IsActive
@@ -14889,7 +14889,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8702425413754196323, guid: 0a7d2469f24041c4284c66706f84c45e, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8839895569409382208, guid: 0a7d2469f24041c4284c66706f84c45e, type: 3}
       propertyPath: m_IsActive
@@ -19107,7 +19107,7 @@ MonoBehaviour:
   m_modelMetaTouchPlusLeftController: {fileID: 700974175}
   m_modelMetaTouchPlusRightController: {fileID: 814619512}
   m_controller: 2
-  m_showState: 1
+  m_showState: 3
   showWhenHandsArePoweredByNaturalControllerPoses: 0
   RayHelper: {fileID: 0}
 --- !u!114 &1259930514
@@ -23272,7 +23272,7 @@ MonoBehaviour:
   m_modelMetaTouchPlusLeftController: {fileID: 799667954}
   m_modelMetaTouchPlusRightController: {fileID: 720529859}
   m_controller: 1
-  m_showState: 1
+  m_showState: 3
   showWhenHandsArePoweredByNaturalControllerPoses: 0
   RayHelper: {fileID: 0}
 --- !u!114 &1598381893

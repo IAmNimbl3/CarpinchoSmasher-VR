@@ -447,7 +447,7 @@ MonoBehaviour:
   _scoringModifier:
     _positionRotationWeight: 0.5
   _slippiness: 0
-  _supportedGrabTypes: 3
+  _supportedGrabTypes: 2
   _pinchGrabRules:
     _thumbRequirement: 0
     _indexRequirement: 1
@@ -463,10 +463,8 @@ MonoBehaviour:
     _pinkyRequirement: 1
     _unselectMode: 0
   _movementProvider: {fileID: 0}
-  _handAligment: 1
-  _handGrabPoses:
-  - {fileID: 1678706420655055850}
-  - {fileID: 5973078206705665745}
+  _handAligment: 0
+  _handGrabPoses: []
 --- !u!114 &6287020995371497250
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -789,6 +787,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b480d21f3371f214281e5f61e4617b7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeshOutlineHighlighter
-  outlineColor: {r: 1, g: 0.82, b: 0.15, a: 0.32}
+  outlineColor: {r: 0, g: 1, b: 0.9909947, a: 0.69803923}
   outlineWidth: 0.015
   outlineMaterial: {fileID: 0}

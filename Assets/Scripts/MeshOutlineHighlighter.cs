@@ -1,58 +1,56 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 [DisallowMultipleComponent]
 public class MeshOutlineHighlighter : MonoBehaviour
 {
-    private const string ShaderGraphOutlineShaderName = "Shader Graphs/InflatedMeshOutlineShaderGraph";
-    private const string FallbackOutlineShaderName = "Carpincho/Inflated Mesh Outline";
+    private const string OutlineObjectPrefix = "__RuntimeMeshOutline_";
 
-    private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
-    private static readonly int OutlineWidthId = Shader.PropertyToID("_OutlineWidth");
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
 
     [SerializeField] private Color outlineColor = new Color(1f, 0.82f, 0.15f, 0.32f);
     [SerializeField, Min(0f)] private float outlineWidth = 0.015f;
     [SerializeField] private Material outlineMaterial;
 
-    private MeshFilter[] _meshFilters;
-    private Renderer[] _renderers;
+    private readonly List<GameObject> _outlineObjects = new();
     private Material _runtimeMaterial;
-    private MaterialPropertyBlock _properties;
-    private bool _subscribed;
 
     public Color OutlineColor
     {
         get => outlineColor;
-        set => outlineColor = value;
+        set
+        {
+            outlineColor = value;
+            ApplyMaterialProperties();
+        }
     }
 
     public float OutlineWidth
     {
         get => outlineWidth;
-        set => outlineWidth = Mathf.Max(0f, value);
-    }
-
-    private void Awake()
-    {
-        CacheRenderers();
-        EnsureMaterial();
+        set
+        {
+            outlineWidth = Mathf.Max(0f, value);
+            ApplyOutlineScale();
+        }
     }
 
     private void OnEnable()
     {
-        CacheRenderers();
-        EnsureMaterial();
-        Subscribe();
+        RebuildOutlines();
+        SetOutlinesVisible(true);
     }
 
     private void OnDisable()
     {
-        Unsubscribe();
+        SetOutlinesVisible(false);
     }
 
     private void OnDestroy()
     {
-        Unsubscribe();
+        ClearOutlines();
 
         if (_runtimeMaterial != null)
         {
@@ -60,111 +58,169 @@ public class MeshOutlineHighlighter : MonoBehaviour
         }
     }
 
-    private void CacheRenderers()
+    private void OnValidate()
     {
-        _meshFilters = GetComponentsInChildren<MeshFilter>(true);
-        _renderers = new Renderer[_meshFilters.Length];
-
-        for (int i = 0; i < _meshFilters.Length; i++)
-        {
-            _renderers[i] = _meshFilters[i] != null
-                ? _meshFilters[i].GetComponent<Renderer>()
-                : null;
-        }
+        outlineWidth = Mathf.Max(0f, outlineWidth);
+        ApplyMaterialProperties();
+        ApplyOutlineScale();
     }
 
-    private void EnsureMaterial()
+    private void RebuildOutlines()
     {
-        if (_properties == null)
-        {
-            _properties = new MaterialPropertyBlock();
-        }
-
-        if (outlineMaterial != null)
+        ClearOutlines();
+        Material material = GetOutlineMaterial();
+        if (material == null)
         {
             return;
+        }
+
+        MeshFilter[] sourceFilters = GetComponentsInChildren<MeshFilter>(true);
+        foreach (MeshFilter sourceFilter in sourceFilters)
+        {
+            if (sourceFilter == null
+                || sourceFilter.sharedMesh == null
+                || sourceFilter.name.StartsWith(OutlineObjectPrefix))
+            {
+                continue;
+            }
+
+            MeshRenderer sourceRenderer = sourceFilter.GetComponent<MeshRenderer>();
+            if (sourceRenderer == null)
+            {
+                continue;
+            }
+
+            GameObject outlineObject = new GameObject(OutlineObjectPrefix + sourceFilter.name);
+            outlineObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            outlineObject.transform.SetParent(sourceFilter.transform, false);
+            outlineObject.transform.localPosition = Vector3.zero;
+            outlineObject.transform.localRotation = Quaternion.identity;
+
+            MeshFilter outlineFilter = outlineObject.AddComponent<MeshFilter>();
+            outlineFilter.sharedMesh = sourceFilter.sharedMesh;
+
+            MeshRenderer outlineRenderer = outlineObject.AddComponent<MeshRenderer>();
+            int materialCount = Mathf.Max(1, sourceRenderer.sharedMaterials.Length);
+            Material[] materials = new Material[materialCount];
+            for (int i = 0; i < materialCount; i++)
+            {
+                materials[i] = material;
+            }
+
+            outlineRenderer.sharedMaterials = materials;
+            outlineRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            outlineRenderer.receiveShadows = false;
+            outlineRenderer.lightProbeUsage = LightProbeUsage.Off;
+            outlineRenderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+            outlineRenderer.allowOcclusionWhenDynamic = false;
+
+            _outlineObjects.Add(outlineObject);
+        }
+
+        ApplyMaterialProperties();
+        ApplyOutlineScale();
+    }
+
+    private Material GetOutlineMaterial()
+    {
+        if (outlineMaterial != null)
+        {
+            return outlineMaterial;
         }
 
         if (_runtimeMaterial != null)
         {
-            return;
+            return _runtimeMaterial;
         }
 
-        Shader outlineShader = Shader.Find(ShaderGraphOutlineShaderName);
-        if (outlineShader == null)
+        Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (shader == null)
         {
-            outlineShader = Shader.Find(FallbackOutlineShaderName);
+            shader = Shader.Find("Unlit/Color");
         }
 
-        if (outlineShader == null)
+        if (shader == null)
         {
-            return;
+            return null;
         }
 
-        _runtimeMaterial = new Material(outlineShader)
+        _runtimeMaterial = new Material(shader)
         {
-            name = "Runtime Inflated Mesh Outline"
+            name = "Runtime Mesh Outline",
+            renderQueue = (int)RenderQueue.Transparent
         };
+
+        _runtimeMaterial.SetInt("_Cull", (int)CullMode.Front);
+        _runtimeMaterial.SetInt("_ZWrite", 0);
+        _runtimeMaterial.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+        _runtimeMaterial.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+        _runtimeMaterial.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+
+        return _runtimeMaterial;
     }
 
-    private void Subscribe()
-    {
-        if (_subscribed)
-        {
-            return;
-        }
-
-        RenderPipelineManager.endCameraRendering += RenderOutline;
-        _subscribed = true;
-    }
-
-    private void Unsubscribe()
-    {
-        if (!_subscribed)
-        {
-            return;
-        }
-
-        RenderPipelineManager.endCameraRendering -= RenderOutline;
-        _subscribed = false;
-    }
-
-    private void RenderOutline(ScriptableRenderContext context, Camera camera)
+    private void ApplyMaterialProperties()
     {
         Material material = outlineMaterial != null ? outlineMaterial : _runtimeMaterial;
-        if (material == null || _meshFilters == null || _renderers == null)
+        if (material == null)
         {
             return;
         }
 
-        _properties.SetColor(OutlineColorId, outlineColor);
-        _properties.SetFloat(OutlineWidthId, outlineWidth);
-
-        CommandBuffer commandBuffer = CommandBufferPool.Get("Mesh Outline Highlighter");
-
-        for (int i = 0; i < _meshFilters.Length; i++)
+        if (material.HasProperty(BaseColorId))
         {
-            MeshFilter meshFilter = _meshFilters[i];
-            Renderer sourceRenderer = _renderers[i];
-            if (meshFilter == null || sourceRenderer == null || !sourceRenderer.enabled)
+            material.SetColor(BaseColorId, outlineColor);
+        }
+
+        if (material.HasProperty(ColorId))
+        {
+            material.SetColor(ColorId, outlineColor);
+        }
+    }
+
+    private void ApplyOutlineScale()
+    {
+        float inflatedScale = 1f + outlineWidth;
+        foreach (GameObject outlineObject in _outlineObjects)
+        {
+            if (outlineObject != null)
+            {
+                outlineObject.transform.localScale = Vector3.one * inflatedScale;
+            }
+        }
+    }
+
+    private void SetOutlinesVisible(bool visible)
+    {
+        foreach (GameObject outlineObject in _outlineObjects)
+        {
+            if (outlineObject != null)
+            {
+                outlineObject.SetActive(visible);
+            }
+        }
+    }
+
+    private void ClearOutlines()
+    {
+        for (int i = _outlineObjects.Count - 1; i >= 0; i--)
+        {
+            GameObject outlineObject = _outlineObjects[i];
+            if (outlineObject == null)
             {
                 continue;
             }
 
-            Mesh mesh = meshFilter.sharedMesh;
-            if (mesh == null)
+            if (Application.isPlaying)
             {
-                continue;
+                Destroy(outlineObject);
             }
-
-            int subMeshCount = Mathf.Max(1, mesh.subMeshCount);
-            for (int subMeshIndex = 0; subMeshIndex < subMeshCount; subMeshIndex++)
+            else
             {
-                commandBuffer.DrawMesh(mesh, meshFilter.transform.localToWorldMatrix, material, subMeshIndex, 0, _properties);
+                DestroyImmediate(outlineObject);
             }
         }
 
-        context.ExecuteCommandBuffer(commandBuffer);
-        CommandBufferPool.Release(commandBuffer);
+        _outlineObjects.Clear();
     }
 }

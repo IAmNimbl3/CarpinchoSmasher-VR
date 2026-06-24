@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Oculus.Interaction;
 using UnityEngine;
 
@@ -13,6 +14,7 @@ public class ThrownHammer : MonoBehaviour
 
     [Header("Lifetime")]
     [SerializeField, Min(0.5f)] private float launchedLifetime = 3f;
+    [SerializeField, Min(0f)] private float handTransferGracePeriod = 1.4f;
 
     [Header("Physics")]
     [SerializeField] private bool useGravityWhenLaunched = true;
@@ -52,6 +54,8 @@ public class ThrownHammer : MonoBehaviour
     private Transform _rightControllerAnchor;
     private bool _gripHighlightsVisible;
     private bool _holsteredGripAreaInflated;
+    private bool _releaseNotified;
+    private Coroutine _pendingReleaseRoutine;
 
     public event Action<ThrownHammer> Grabbed;
     public event Action<ThrownHammer> Released;
@@ -78,6 +82,8 @@ public class ThrownHammer : MonoBehaviour
         {
             _grabbable.WhenPointerEventRaised -= HandlePointerEventRaised;
         }
+
+        CancelPendingRelease();
     }
 
     private void Update()
@@ -112,6 +118,8 @@ public class ThrownHammer : MonoBehaviour
         CacheReferences();
 
         _state = HammerState.Holstered;
+        CancelPendingRelease();
+        _releaseNotified = false;
         _launchedTimer = 0f;
         _launchVelocityTuneFrames = 0;
         _wasSelected = false;
@@ -132,6 +140,7 @@ public class ThrownHammer : MonoBehaviour
     {
         if (_state == HammerState.Held)
         {
+            CancelPendingRelease();
             return;
         }
 
@@ -141,6 +150,8 @@ public class ThrownHammer : MonoBehaviour
         }
 
         _state = HammerState.Held;
+        CancelPendingRelease();
+        _releaseNotified = false;
         _launchedTimer = 0f;
         _launchVelocityTuneFrames = 0;
         SetGripHighlightsVisible(false);
@@ -160,7 +171,7 @@ public class ThrownHammer : MonoBehaviour
         GameAudioEvents.RaiseHammerGrabbed(transform.position);
     }
 
-    private void BeginLaunched()
+    private void BeginLaunched(bool notifyReleased)
     {
         if (_state == HammerState.Launched)
         {
@@ -168,6 +179,7 @@ public class ThrownHammer : MonoBehaviour
         }
 
         _state = HammerState.Launched;
+        CancelPendingRelease();
         _launchedTimer = launchedLifetime;
         _launchVelocityTuneFrames = 3;
         SetGripHighlightsVisible(false);
@@ -184,7 +196,10 @@ public class ThrownHammer : MonoBehaviour
             _damageDealer.ResetHitCache();
         }
 
-        Released?.Invoke(this);
+        if (notifyReleased)
+        {
+            NotifyReleased();
+        }
     }
 
     private void HandlePointerEventRaised(PointerEvent evt)
@@ -197,10 +212,58 @@ public class ThrownHammer : MonoBehaviour
         }
         else if (!isSelected && _wasSelected)
         {
-            BeginLaunched();
+            StartReleaseValidation();
         }
 
         _wasSelected = isSelected;
+    }
+
+    private void StartReleaseValidation()
+    {
+        CancelPendingRelease();
+        BeginLaunched(notifyReleased: false);
+
+        if (handTransferGracePeriod <= 0f)
+        {
+            NotifyReleased();
+            return;
+        }
+
+        _pendingReleaseRoutine = StartCoroutine(ValidateReleaseAfterGracePeriod());
+    }
+
+    private IEnumerator ValidateReleaseAfterGracePeriod()
+    {
+        yield return new WaitForSeconds(handTransferGracePeriod);
+        _pendingReleaseRoutine = null;
+
+        if ((_grabbable == null || _grabbable.SelectingPointsCount == 0)
+            && _state == HammerState.Launched)
+        {
+            NotifyReleased();
+        }
+    }
+
+    private void NotifyReleased()
+    {
+        if (_releaseNotified)
+        {
+            return;
+        }
+
+        _releaseNotified = true;
+        Released?.Invoke(this);
+    }
+
+    private void CancelPendingRelease()
+    {
+        if (_pendingReleaseRoutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(_pendingReleaseRoutine);
+        _pendingReleaseRoutine = null;
     }
 
     private void CacheReferences()
