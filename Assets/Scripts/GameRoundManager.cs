@@ -197,6 +197,13 @@ public class GameRoundManager : MonoBehaviour
             + _cameraAnchor.TransformVector(uiOffset);
         canvasTransform.rotation = Quaternion.LookRotation(canvasTransform.position - _cameraAnchor.position, Vector3.up);
 
+        if (_roundCountdownActive)
+        {
+            SetRoundRayVisualsVisible(false);
+            RestoreRoundButtonHoverColors();
+            return;
+        }
+
         UpdateRoundRayVisuals();
     }
 
