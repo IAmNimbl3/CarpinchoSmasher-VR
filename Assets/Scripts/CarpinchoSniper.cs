@@ -54,6 +54,7 @@ public class CarpinchoSniper : Enemy
 
         if (_agent != null)
         {
+            _agent.updateUpAxis = true;
             if (NavMesh.SamplePosition(position, out NavMeshHit hit, sampleRadius * 4f, NavMesh.AllAreas))
             {
                 _agent.Warp(hit.position);
@@ -104,6 +105,7 @@ public class CarpinchoSniper : Enemy
         {
             _agent.isStopped = false;
             _agent.updateRotation = true;
+            _agent.updateUpAxis = true;
         }
         TryPickNewPosition();
     }

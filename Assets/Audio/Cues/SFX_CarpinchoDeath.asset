@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: SFX_CarpinchoDeath
   m_EditorClassIdentifier: Assembly-CSharp::AudioCue
   category: 1
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: b0445439341f71b41b94a93f1b568719, type: 3}
   volume: 1
   pitchRange: {x: 1, y: 1}
   spatialBlend: 1

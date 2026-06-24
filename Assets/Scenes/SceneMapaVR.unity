@@ -24818,6 +24818,7 @@ MonoBehaviour:
     maxAlive: 10
     allowedTypes: 00000000020000000100000003000000
   autoStart: 1
+  finalPhaseDuration: 60
 --- !u!4 &1704790174
 Transform:
   m_ObjectHideFlags: 0
@@ -29807,6 +29808,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameRoundManager
   spawner: {fileID: 1704790173}
   cameraRig: {fileID: 1429269525}
+  playerHealth: {fileID: 0}
   createRoundUiOnAwake: 1
   uiDistanceFromCamera: 1.4
   uiOffset: {x: 0, y: -0.04, z: 0}
@@ -29814,6 +29816,11 @@ MonoBehaviour:
   panelColor: {r: 0.2528302, g: 0.2528302, b: 0.2528302, a: 0.58}
   accentColor: {r: 1, g: 0.702432, b: 0.1490196, a: 0.95}
   defaultScorePerKill: 10
+  menuSceneName: Sample Optimizada
+  createHealthHudOnAwake: 1
+  healthHudSize: {x: 320, y: 72}
+  healthHudBottomOffset: 180
+  healthHudColor: {r: 0, g: 0, b: 0, a: 0.55}
 --- !u!4 &2038409989
 Transform:
   m_ObjectHideFlags: 0

@@ -120,7 +120,13 @@ public class AudioManager : MonoBehaviour
 
     private void HandleCarpinchoDied(Vector3 position)
     {
-        PlaySfxAt(library != null ? library.CarpinchoDeath : null, position);
+        if (library == null)
+        {
+            return;
+        }
+
+        PlaySfxAt(library.CarpinchoDeath, position);
+        PlaySfxAt(library.CarpinchoDeathScream, position);
     }
 
     private void HandleHammerGrabbed(Vector3 position)

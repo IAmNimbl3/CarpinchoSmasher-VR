@@ -15,8 +15,8 @@ public class CarpinchoJuggernaut : Enemy
     [Header("Juggernaut · Chase")]
     [SerializeField, Min(1f)] private float chaseSpeed = 1f;
     [SerializeField, Min(0.1f)] private float repathInterval = 0.5f;
-    [Tooltip("Distancia al jugador a la que arranca el casteo del ataque.")]
-    [SerializeField, Min(0.3f)] private float meleeRange = 1.6f;
+    [Tooltip("Distancia al jugador a la que se frena para atacar. Bajala para que se acerque mas; subila para dar mas margen al martillo.")]
+    [SerializeField, Min(0.3f)] private float meleeRange = 1.2f;
 
     [Header("Juggernaut · Telegraph + Lunge")]
     [Tooltip("Duración del casteo antes del lunge. Más largo = más tiempo para reaccionar.")]
@@ -24,11 +24,13 @@ public class CarpinchoJuggernaut : Enemy
     [Tooltip("Duración del lunge committed (no gira durante este tiempo).")]
     [SerializeField, Min(0.1f)] private float lungeDuration = 0.45f;
     [SerializeField, Min(1f)] private float lungeSpeed = 4f;
+    [SerializeField, Min(0.05f)] private float chargeAnimationSpeed = 0.6f;
+    [SerializeField, Min(0.05f)] private float attackAnimationSpeed = 0.55f;
     [FormerlySerializedAs("damageDistance")]
     [Tooltip("Radio al jugador durante el lunge. Si está dentro, daño.")]
     [SerializeField, Min(0.1f)] private float hitRadius = 1f;
     [FormerlySerializedAs("contactDamage")]
-    [SerializeField, Min(0)] private int attackDamage = 1;
+    [SerializeField, Min(0)] private int attackDamage = 10;
 
     [Header("Juggernaut · Escudo")]
     [Tooltip("Tamaño del arco vulnerable en grados, centrado en el ángulo actual.")]
@@ -50,6 +52,7 @@ public class CarpinchoJuggernaut : Enemy
     private float _zoneTimer;
     private float _repathTimer;
     private Vector3 _lungeDirection;
+    private bool _hasHitThisAttack;
     private MaterialPropertyBlock _propertyBlock;
 
     protected override void Awake()
@@ -64,6 +67,7 @@ public class CarpinchoJuggernaut : Enemy
 
         if (_agent != null)
         {
+            _agent.updateUpAxis = true;
             if (NavMesh.SamplePosition(position, out NavMeshHit hit, 4f, NavMesh.AllAreas))
             {
                 _agent.Warp(hit.position);
@@ -117,12 +121,15 @@ public class CarpinchoJuggernaut : Enemy
     private void EnterChasing()
     {
         _state = State.Chasing;
+        ResetAnimationSpeed();
         SetWalkingAnimation(true);
         if (_agent != null)
         {
             _agent.isStopped = false;
             _agent.updateRotation = true;
+            _agent.updateUpAxis = true;
             _agent.speed = chaseSpeed;
+            _agent.stoppingDistance = meleeRange;
         }
         _repathTimer = 0f;
     }
@@ -170,7 +177,7 @@ public class CarpinchoJuggernaut : Enemy
     {
         _state = State.Telegraphing;
         _stateTimer = telegraphDuration;
-        PlayChargeAnimation();
+        PlayChargeAnimation(chargeAnimationSpeed);
         if (_agent != null)
         {
             _agent.ResetPath();
@@ -181,7 +188,7 @@ public class CarpinchoJuggernaut : Enemy
 
     private void TickTelegraphing()
     {
-        PlayChargeAnimation();
+        PlayChargeAnimation(chargeAnimationSpeed);
 
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
@@ -204,7 +211,15 @@ public class CarpinchoJuggernaut : Enemy
     {
         _state = State.Attacking;
         _stateTimer = lungeDuration;
-        PlayMeleeAnimation();
+        _hasHitThisAttack = false;
+        PlayMeleeAnimation(attackAnimationSpeed);
+
+        if (_agent != null)
+        {
+            _agent.ResetPath();
+            _agent.isStopped = true;
+            _agent.updateRotation = false;
+        }
 
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
@@ -221,29 +236,26 @@ public class CarpinchoJuggernaut : Enemy
         {
             transform.rotation = Quaternion.LookRotation(_lungeDirection);
         }
+
+        TryApplyAttackDamage();
     }
 
     private void TickAttacking()
     {
-        Vector3 step = _lungeDirection * lungeSpeed * Time.deltaTime;
-        if (_agent != null && _agent.isOnNavMesh)
-        {
-            _agent.Move(step);
-        }
-        else
-        {
-            transform.position += step;
-        }
-
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
-            float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
-            if (sqr <= hitRadius * hitRadius)
+            FacePosition(playerPos, 10f);
+
+            if (!_hasHitThisAttack)
             {
-                // TODO: enganchar con PlayerHealth (GDD §9 TBD).
-                Debug.Log($"[Juggernaut] Lunge impactó al jugador ({attackDamage}).", this);
-                EnterNextAttackCycle(playerPos);
-                return;
+                float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
+                if (sqr <= hitRadius * hitRadius)
+                {
+                    // TODO: enganchar con PlayerHealth (GDD §9 TBD).
+                    Debug.Log($"[Juggernaut] Lunge impactó al jugador ({attackDamage}).", this);
+                    PlayerHealth.TryDamage(attackDamage, this);
+                    _hasHitThisAttack = true;
+                }
             }
         }
 
@@ -270,6 +282,31 @@ public class CarpinchoJuggernaut : Enemy
         }
 
         EnterChasing();
+    }
+
+    private void TryApplyAttackDamage()
+    {
+        if (_hasHitThisAttack)
+        {
+            return;
+        }
+
+        Debug.Log($"[Juggernaut] Ataque impacto al jugador ({attackDamage}).", this);
+        PlayerHealth.TryDamage(attackDamage, this);
+        _hasHitThisAttack = true;
+    }
+
+    private void FacePosition(Vector3 targetPosition, float rotationSpeed)
+    {
+        Vector3 look = targetPosition - transform.position;
+        look.y = 0f;
+        if (look.sqrMagnitude <= 0.0001f)
+        {
+            return;
+        }
+
+        Quaternion target = Quaternion.LookRotation(look);
+        transform.rotation = Quaternion.Slerp(transform.rotation, target, Time.deltaTime * rotationSpeed);
     }
 
     private void UpdateIndicatorTransform()

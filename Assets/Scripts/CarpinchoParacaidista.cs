@@ -1,13 +1,14 @@
+﻿using System;
 using UnityEngine;
 
 public class CarpinchoParacaidista : Enemy
 {
-    [Header("Caída")]
-    [Tooltip("Velocidad vertical de caída en m/s (paracaídas, suave).")]
+    [Header("CaÃ­da")]
+    [Tooltip("Velocidad vertical de caÃ­da en m/s (paracaÃ­das, suave).")]
     [SerializeField, Min(0f)] private float fallSpeed = 2f;
     [Tooltip("Velocidad de tracking horizontal hacia el jugador. Si es muy alta, no se puede esquivar.")]
     [SerializeField, Min(0f)] private float horizontalSpeed = 1.5f;
-    [Tooltip("Si está activo, gira para mirar al jugador durante la caída.")]
+    [Tooltip("Si estÃ¡ activo, gira para mirar al jugador durante la caÃ­da.")]
     [SerializeField] private bool facePlayer = true;
 
     [Header("Impacto en suelo")]
@@ -15,11 +16,15 @@ public class CarpinchoParacaidista : Enemy
     [SerializeField] private float groundY = 0f;
     [Tooltip("Distancia sobre el suelo a la que explota.")]
     [SerializeField, Min(0f)] private float explodeAtHeight = 0.2f;
+    [Tooltip("Capas consideradas suelo para detectar el impacto. Por defecto incluye todo y filtra su propio collider.")]
+    [SerializeField] private LayerMask groundMask = ~0;
+    [SerializeField, Min(0.1f)] private float groundProbeHeight = 1.5f;
+    [SerializeField, Min(0f)] private float groundProbeExtraDistance = 0.5f;
 
-    [Header("Explosión")]
-    [Tooltip("Radio en el que el jugador recibe daño al impactar el suelo.")]
+    [Header("ExplosiÃ³n")]
+    [Tooltip("Radio en el que el jugador recibe daÃ±o al impactar el suelo.")]
     [SerializeField, Min(0f)] private float explosionRadius = 2f;
-    [SerializeField, Min(0)] private int explosionDamage = 1;
+    [SerializeField, Min(0)] private int explosionDamage = 20;
     [SerializeField] private GameObject explosionVfx;
 
     private bool _exploded;
@@ -39,7 +44,8 @@ public class CarpinchoParacaidista : Enemy
             return;
         }
 
-        Vector3 position = transform.position;
+        Vector3 previousPosition = transform.position;
+        Vector3 position = previousPosition;
         position.y -= fallSpeed * Time.deltaTime;
 
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
@@ -61,6 +67,13 @@ public class CarpinchoParacaidista : Enemy
         }
 
         transform.position = position;
+
+        if (TryGetGroundImpact(previousPosition, position, out RaycastHit groundHit))
+        {
+            transform.position = groundHit.point;
+            Explode();
+            return;
+        }
 
         if (position.y <= groundY + explodeAtHeight)
         {
@@ -103,12 +116,47 @@ public class CarpinchoParacaidista : Enemy
             float distance = Vector3.Distance(transform.position, playerPos);
             if (distance <= explosionRadius)
             {
-                // TODO: enganchar con PlayerHealth cuando se decida sistema de daño (GDD §9 TBD).
-                Debug.Log($"[Paracaidista] Player dentro del radio de explosión ({distance:F2}m / {explosionRadius:F2}m). Daño: {explosionDamage}.", this);
+                PlayerHealth.TryDamage(explosionDamage, this);
+                // TODO: enganchar con PlayerHealth cuando se decida sistema de daÃ±o (GDD Â§9 TBD).
+                Debug.Log($"[Paracaidista] Player dentro del radio de explosiÃ³n ({distance:F2}m / {explosionRadius:F2}m). DaÃ±o: {explosionDamage}.", this);
             }
         }
 
         Die();
+    }
+
+    private bool TryGetGroundImpact(Vector3 previousPosition, Vector3 nextPosition, out RaycastHit groundHit)
+    {
+        float topY = Mathf.Max(previousPosition.y, nextPosition.y) + groundProbeHeight;
+        Vector3 origin = new Vector3(nextPosition.x, topY, nextPosition.z);
+        float castDistance = groundProbeHeight
+            + Mathf.Abs(previousPosition.y - nextPosition.y)
+            + explodeAtHeight
+            + groundProbeExtraDistance;
+
+        RaycastHit[] hits = Physics.RaycastAll(origin, Vector3.down, castDistance, groundMask, QueryTriggerInteraction.Ignore);
+        Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            RaycastHit hit = hits[i];
+            if (hit.collider == null || hit.transform.IsChildOf(transform))
+            {
+                continue;
+            }
+
+            bool crossedGround = previousPosition.y >= hit.point.y + explodeAtHeight
+                && nextPosition.y <= hit.point.y + explodeAtHeight;
+            bool alreadyTouching = nextPosition.y <= hit.point.y + explodeAtHeight;
+            if (crossedGround || alreadyTouching)
+            {
+                groundHit = hit;
+                return true;
+            }
+        }
+
+        groundHit = default;
+        return false;
     }
 
     private void OnDrawGizmosSelected()

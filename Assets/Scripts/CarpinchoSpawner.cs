@@ -78,6 +78,8 @@ public class CarpinchoSpawner : MonoBehaviour
 
     [Header("Lifecycle")]
     [SerializeField] private bool autoStart = true;
+    [Tooltip("Duracion de la ultima fase antes de cerrar la ronda final. Al llegar a este tiempo deja de spawnear y espera a que mueran los vivos.")]
+    [SerializeField, Min(0f)] private float finalPhaseDuration = 60f;
 
     public static CarpinchoSpawner Instance { get; private set; }
 
@@ -168,6 +170,30 @@ public class CarpinchoSpawner : MonoBehaviour
         _nextSpawnAt = Mathf.Max(_nextSpawnAt, _elapsedTime);
     }
 
+    public void RestartCurrentPhase()
+    {
+        int phaseIndex = Mathf.Max(0, _phaseIndex);
+        RestartPhase(phaseIndex);
+    }
+
+    public void RestartPhase(int phaseIndex)
+    {
+        if (phases == null || phases.Length == 0)
+        {
+            BeginSpawning();
+            return;
+        }
+
+        phaseIndex = Mathf.Clamp(phaseIndex, 0, phases.Length - 1);
+        DespawnAll();
+
+        _running = true;
+        _paused = false;
+        _phaseIndex = phaseIndex;
+        _elapsedTime = phases[phaseIndex] != null ? phases[phaseIndex].startTime : 0f;
+        _nextSpawnAt = _elapsedTime;
+    }
+
     public string GetPhaseLabel(int phaseIndex)
     {
         if (phases == null || phaseIndex < 0 || phaseIndex >= phases.Length)
@@ -248,6 +274,13 @@ public class CarpinchoSpawner : MonoBehaviour
             {
                 break;
             }
+        }
+
+        if (finalPhaseDuration > 0f
+            && newIndex == phases.Length - 1
+            && _elapsedTime >= phases[newIndex].startTime + finalPhaseDuration)
+        {
+            newIndex = phases.Length;
         }
 
         if (newIndex != _phaseIndex)

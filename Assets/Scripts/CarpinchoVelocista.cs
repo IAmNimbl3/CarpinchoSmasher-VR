@@ -14,8 +14,8 @@ public class CarpinchoVelocista : Enemy
     [Header("Velocista · Chase")]
     [SerializeField, Min(1f)] private float chaseSpeed = 1f;
     [SerializeField, Min(0.1f)] private float repathInterval = 0.2f;
-    [Tooltip("Distancia al jugador a la que arranca el telegraph del ataque.")]
-    [SerializeField, Min(0.3f)] private float meleeRange = 1.5f;
+    [Tooltip("Distancia al jugador a la que se frena para atacar. Bajala para que se acerque mas; subila para dar mas margen al martillo.")]
+    [SerializeField, Min(0.3f)] private float meleeRange = 1.15f;
 
     [Header("Velocista · Telegraph + Lunge")]
     [Tooltip("Duración del telegraph antes del lunge. Más largo = más fácil esquivar.")]
@@ -23,9 +23,11 @@ public class CarpinchoVelocista : Enemy
     [Tooltip("Duración del lunge committed (no gira durante este tiempo).")]
     [SerializeField, Min(0.1f)] private float lungeDuration = 0.4f;
     [SerializeField, Min(1f)] private float lungeSpeed = 6f;
+    [SerializeField, Min(0.05f)] private float chargeAnimationSpeed = 0.65f;
+    [SerializeField, Min(0.05f)] private float attackAnimationSpeed = 0.6f;
     [Tooltip("Radio al jugador durante el lunge. Si está dentro, daño. Si nunca entró, esquivó.")]
     [SerializeField, Min(0.1f)] private float hitRadius = 0.7f;
-    [SerializeField, Min(0)] private int attackDamage = 1;
+    [SerializeField, Min(0)] private int attackDamage = 10;
 
     [Header("Velocista · Visuals")]
     [Tooltip("Indicador de estado encima de la cabeza durante el casteo del ataque.")]
@@ -39,6 +41,7 @@ public class CarpinchoVelocista : Enemy
     private float _stateTimer;
     private float _repathTimer;
     private Vector3 _lungeDirection;
+    private bool _hasHitThisAttack;
     private MaterialPropertyBlock _propertyBlock;
 
     protected override void Awake()
@@ -53,6 +56,7 @@ public class CarpinchoVelocista : Enemy
 
         if (_agent != null)
         {
+            _agent.updateUpAxis = true;
             if (NavMesh.SamplePosition(position, out NavMeshHit hit, 4f, NavMesh.AllAreas))
             {
                 _agent.Warp(hit.position);
@@ -99,12 +103,15 @@ public class CarpinchoVelocista : Enemy
     private void EnterChasing()
     {
         _state = State.Chasing;
+        ResetAnimationSpeed();
         SetWalkingAnimation(true);
         if (_agent != null)
         {
             _agent.isStopped = false;
             _agent.updateRotation = true;
+            _agent.updateUpAxis = true;
             _agent.speed = chaseSpeed;
+            _agent.stoppingDistance = meleeRange;
         }
         HideIndicator();
         _repathTimer = 0f;
@@ -140,7 +147,7 @@ public class CarpinchoVelocista : Enemy
     {
         _state = State.Telegraphing;
         _stateTimer = telegraphDuration;
-        PlayChargeAnimation();
+        PlayChargeAnimation(chargeAnimationSpeed);
         if (_agent != null)
         {
             _agent.ResetPath();
@@ -152,7 +159,7 @@ public class CarpinchoVelocista : Enemy
 
     private void TickTelegraphing()
     {
-        PlayChargeAnimation();
+        PlayChargeAnimation(chargeAnimationSpeed);
 
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
@@ -175,7 +182,15 @@ public class CarpinchoVelocista : Enemy
     {
         _state = State.Attacking;
         _stateTimer = lungeDuration;
-        PlayMeleeAnimation();
+        _hasHitThisAttack = false;
+        PlayMeleeAnimation(attackAnimationSpeed);
+
+        if (_agent != null)
+        {
+            _agent.ResetPath();
+            _agent.isStopped = true;
+            _agent.updateRotation = false;
+        }
 
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
@@ -193,30 +208,26 @@ public class CarpinchoVelocista : Enemy
             transform.rotation = Quaternion.LookRotation(_lungeDirection);
         }
 
+        TryApplyAttackDamage();
         HideIndicator();
     }
 
     private void TickAttacking()
     {
-        Vector3 step = _lungeDirection * lungeSpeed * Time.deltaTime;
-        if (_agent != null && _agent.isOnNavMesh)
-        {
-            _agent.Move(step);
-        }
-        else
-        {
-            transform.position += step;
-        }
-
         if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
-            float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
-            if (sqr <= hitRadius * hitRadius)
+            FacePosition(playerPos, 10f);
+
+            if (!_hasHitThisAttack)
             {
-                // TODO: enganchar con PlayerHealth (GDD §9 TBD).
-                Debug.Log($"[Velocista] Lunge impactó al jugador ({attackDamage}).", this);
-                EnterNextAttackCycle(playerPos);
-                return;
+                float sqr = PlayerTarget.HorizontalSqrDistance(transform.position, playerPos);
+                if (sqr <= hitRadius * hitRadius)
+                {
+                    // TODO: enganchar con PlayerHealth (GDD §9 TBD).
+                    Debug.Log($"[Velocista] Lunge impactó al jugador ({attackDamage}).", this);
+                    PlayerHealth.TryDamage(attackDamage, this);
+                    _hasHitThisAttack = true;
+                }
             }
         }
 
@@ -243,6 +254,31 @@ public class CarpinchoVelocista : Enemy
         }
 
         EnterChasing();
+    }
+
+    private void TryApplyAttackDamage()
+    {
+        if (_hasHitThisAttack)
+        {
+            return;
+        }
+
+        Debug.Log($"[Velocista] Ataque impacto al jugador ({attackDamage}).", this);
+        PlayerHealth.TryDamage(attackDamage, this);
+        _hasHitThisAttack = true;
+    }
+
+    private void FacePosition(Vector3 targetPosition, float rotationSpeed)
+    {
+        Vector3 look = targetPosition - transform.position;
+        look.y = 0f;
+        if (look.sqrMagnitude <= 0.0001f)
+        {
+            return;
+        }
+
+        Quaternion target = Quaternion.LookRotation(look);
+        transform.rotation = Quaternion.Slerp(transform.rotation, target, Time.deltaTime * rotationSpeed);
     }
 
     private void ShowIndicator(Color color)

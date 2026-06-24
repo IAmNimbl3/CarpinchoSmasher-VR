@@ -16,5 +16,6 @@ MonoBehaviour:
   gameplayMusic: {fileID: 11400000, guid: b03dab34c7669a54180c8d881aa8fc78, type: 2}
   defeatMusic: {fileID: 11400000, guid: 54d64b85b301afa4eaa34b80e2d34505, type: 2}
   carpinchoDeath: {fileID: 11400000, guid: 3e3fb5f18136ff54d854382fcb00e138, type: 2}
+  carpinchoDeathScream: {fileID: 11400000, guid: 05cf23e32a9107f4ca4b035070ff4ab5, type: 2}
   hammerGrab: {fileID: 11400000, guid: 14d8858e4e488ae44accbc191240b190, type: 2}
   menuTeleport: {fileID: 11400000, guid: 4ed476f321e259d4c9ea7d82fbf6ffa3, type: 2}

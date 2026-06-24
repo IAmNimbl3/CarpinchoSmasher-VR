@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Music_Gameplay
   m_EditorClassIdentifier: Assembly-CSharp::AudioCue
   category: 0
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 07e6b9f01894ef543a56e2ade3f96bc7, type: 3}
   volume: 0.8
   pitchRange: {x: 1, y: 1}
   spatialBlend: 0

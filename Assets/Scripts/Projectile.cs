@@ -9,7 +9,7 @@ public class Projectile : MonoBehaviour
     [Header("Hit")]
     [Tooltip("Distancia al HMD del jugador a la que se cuenta un impacto.")]
     [SerializeField, Min(0.05f)] private float playerHitRadius = 0.35f;
-    [SerializeField, Min(0)] private int damage = 1;
+    [SerializeField, Min(0)] private int damage = 5;
 
     [Header("VFX")]
     [SerializeField] private GameObject impactVfx;
@@ -66,6 +66,7 @@ public class Projectile : MonoBehaviour
             {
                 // TODO: enganchar con PlayerHealth (GDD §9 TBD).
                 Debug.Log($"[Projectile] Impacto a jugador. Daño: {damage}.", this);
+                PlayerHealth.TryDamage(damage, this);
                 Impact();
             }
         }

@@ -75,12 +75,14 @@ MonoBehaviour:
   destroyWeaponOnHit: 1
   chaseSpeed: 1
   repathInterval: 0.2
-  meleeRange: 2
-  telegraphDuration: 0.5
-  lungeDuration: 0.4
+  meleeRange: 1.15
+  telegraphDuration: 0.9
+  lungeDuration: 0.8
   lungeSpeed: 2
+  chargeAnimationSpeed: 0.65
+  attackAnimationSpeed: 0.6
   hitRadius: 1
-  attackDamage: 1
+  attackDamage: 10
   stateIndicator: {fileID: 2098295600300744148}
   telegraphColor: {r: 1, g: 0.9, b: 0, a: 1}
 --- !u!195 &4385780508500277464

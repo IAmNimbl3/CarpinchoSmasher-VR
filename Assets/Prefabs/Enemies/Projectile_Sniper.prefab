@@ -156,5 +156,5 @@ MonoBehaviour:
   speed: 8
   lifetime: 5
   playerHitRadius: 0.35
-  damage: 1
+  damage: 5
   impactVfx: {fileID: 0}

@@ -10,10 +10,12 @@ public class AudioLibrary : ScriptableObject
 
     [Header("SFX")]
     [SerializeField] private AudioCue carpinchoDeath;
+    [SerializeField] private AudioCue carpinchoDeathScream;
     [SerializeField] private AudioCue hammerGrab;
     [SerializeField] private AudioCue menuTeleport;
 
     public AudioCue CarpinchoDeath => carpinchoDeath;
+    public AudioCue CarpinchoDeathScream => carpinchoDeathScream;
     public AudioCue HammerGrab => hammerGrab;
     public AudioCue MenuTeleport => menuTeleport;
 

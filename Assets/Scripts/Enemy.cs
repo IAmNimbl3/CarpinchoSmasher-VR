@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -31,6 +32,12 @@ public class Enemy : MonoBehaviour
     [Tooltip("Destruye el arma al impactar (comportamiento legacy del martillo lanzado).")]
     [SerializeField] private bool destroyWeaponOnHit = true;
 
+    [Header("Orientation")]
+    [Tooltip("Mantiene el root del enemigo derecho, evitando que herede pitch/roll de spawn points o agentes.")]
+    [SerializeField] private bool forceUprightRotation = true;
+    [Tooltip("Cantidad de frames posteriores al spawn en los que se revalida world position/rotation.")]
+    [SerializeField, Min(0)] private int postSpawnAlignmentFrames = 1;
+
     public virtual CarpinchoType Type => type;
     public int ScoreValue => scoreValue;
     public bool IsDead => _isDead;
@@ -53,7 +60,7 @@ public class Enemy : MonoBehaviour
 
     public virtual void OnSpawned(Vector3 position, Quaternion rotation)
     {
-        transform.SetPositionAndRotation(position, rotation);
+        transform.SetPositionAndRotation(position, GetUprightRotation(rotation));
 
         if (_rigidbody != null)
         {
@@ -65,6 +72,19 @@ public class Enemy : MonoBehaviour
         gameObject.SetActive(true);
 
         ResetAnimation();
+
+        if (postSpawnAlignmentFrames > 0)
+        {
+            StartCoroutine(ApplyPostSpawnAlignment());
+        }
+    }
+
+    protected virtual void LateUpdate()
+    {
+        if (!IsDead)
+        {
+            ForceUprightRotation();
+        }
     }
 
     public virtual void OnDespawned()
@@ -147,12 +167,33 @@ public class Enemy : MonoBehaviour
 
     protected void PlayChargeAnimation()
     {
+        SetAnimationSpeed(1f);
         SetWalkingAnimation(false);
         PlayStateIfAvailable(ChargeState, 0.06f);
     }
 
     protected void PlayMeleeAnimation()
     {
+        SetAnimationSpeed(1f);
+        SetWalkingAnimation(false);
+        if (_animator != null && _hasMeleeParameter)
+        {
+            _animator.SetTrigger(MeleeParameter);
+        }
+
+        PlayStateIfAvailable(MeleeState, 0.04f);
+    }
+
+    protected void PlayChargeAnimation(float speed)
+    {
+        SetAnimationSpeed(speed);
+        SetWalkingAnimation(false);
+        PlayStateIfAvailable(ChargeState, 0.06f);
+    }
+
+    protected void PlayMeleeAnimation(float speed)
+    {
+        SetAnimationSpeed(speed);
         SetWalkingAnimation(false);
         if (_animator != null && _hasMeleeParameter)
         {
@@ -164,6 +205,7 @@ public class Enemy : MonoBehaviour
 
     protected void PlayShootAnimation()
     {
+        SetAnimationSpeed(1f);
         SetWalkingAnimation(false);
         if (_animator != null && _hasShootParameter)
         {
@@ -173,6 +215,59 @@ public class Enemy : MonoBehaviour
         PlayStateIfAvailable(ShootState, 0.02f);
     }
 
+    protected void SetAnimationSpeed(float speed)
+    {
+        if (_animator != null)
+        {
+            _animator.speed = Mathf.Max(0.05f, speed);
+        }
+    }
+
+    protected void ResetAnimationSpeed()
+    {
+        SetAnimationSpeed(1f);
+    }
+
+    protected void ForceUprightRotation()
+    {
+        if (!forceUprightRotation)
+        {
+            return;
+        }
+
+        transform.rotation = GetUprightRotation(transform.rotation);
+    }
+
+    private IEnumerator ApplyPostSpawnAlignment()
+    {
+        for (int i = 0; i < postSpawnAlignmentFrames; i++)
+        {
+            yield return null;
+
+            Vector3 worldPosition = transform.position;
+            Quaternion worldRotation = GetUprightRotation(transform.rotation);
+            transform.SetPositionAndRotation(worldPosition, worldRotation);
+
+            if (_rigidbody != null)
+            {
+                _rigidbody.position = worldPosition;
+                _rigidbody.rotation = worldRotation;
+                _rigidbody.linearVelocity = Vector3.zero;
+                _rigidbody.angularVelocity = Vector3.zero;
+            }
+        }
+    }
+
+    private Quaternion GetUprightRotation(Quaternion rotation)
+    {
+        if (!forceUprightRotation)
+        {
+            return rotation;
+        }
+
+        return Quaternion.Euler(0f, rotation.eulerAngles.y, 0f);
+    }
+
     private void ResetAnimation()
     {
         if (_animator == null)
@@ -180,6 +275,7 @@ public class Enemy : MonoBehaviour
             return;
         }
 
+        _animator.speed = 1f;
         _animator.Rebind();
         _animator.Update(0f);
     }

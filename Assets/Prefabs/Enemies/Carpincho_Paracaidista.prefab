@@ -78,7 +78,7 @@ MonoBehaviour:
   groundY: 0
   explodeAtHeight: 0.2
   explosionRadius: 2
-  explosionDamage: 1
+  explosionDamage: 20
   explosionVfx: {fileID: 7744676672056235082, guid: ffc56d132993eba46b4827223f364ea0, type: 3}
 --- !u!1001 &845255103279134902
 PrefabInstance:

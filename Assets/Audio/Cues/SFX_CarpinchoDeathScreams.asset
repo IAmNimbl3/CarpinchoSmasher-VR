@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e9e39c54299e34dbde8475416e0195, type: 3}
+  m_Name: SFX_CarpinchoDeathScreams
+  m_EditorClassIdentifier: Assembly-CSharp::AudioCue
+  category: 1
+  clips:
+  - {fileID: 8300000, guid: ac19dbada52420143a476148f527678e, type: 3}
+  - {fileID: 8300000, guid: 166c30ce6a301cd4fa9c3c750a413ec0, type: 3}
+  - {fileID: 8300000, guid: 93d6f5f59c106b847acf6e35fbdbae30, type: 3}
+  - {fileID: 8300000, guid: a7465673cc99d3b4c90d21d01cd8a6ac, type: 3}
+  - {fileID: 8300000, guid: 4fd9b1cb03603ab42991d841303b0b5e, type: 3}
+  - {fileID: 8300000, guid: 2ef45bc0f785d2d429ba532f3785ce76, type: 3}
+  - {fileID: 8300000, guid: c896a8739048c7c43b06f3a6fe22e844, type: 3}
+  - {fileID: 8300000, guid: a245a48a85e5e794b89ac72a222f82df, type: 3}
+  - {fileID: 8300000, guid: 51ffb80708aadc54eb5bc79a6632ec5d, type: 3}
+  - {fileID: 8300000, guid: 859b41aaeed95cb4d96f828adc123f5f, type: 3}
+  - {fileID: 8300000, guid: d6360753c10a45a4cb29e81e7591244b, type: 3}
+  - {fileID: 8300000, guid: 10a4d279ad50c4e438c2a3cdcdc04b49, type: 3}
+  - {fileID: 8300000, guid: d7325938a5bbe634db263e86876ec958, type: 3}
+  - {fileID: 8300000, guid: 69912e466d812cc4d926d39f9c60ce55, type: 3}
+  - {fileID: 8300000, guid: 1750dc1329af3324dbcf5119bae515bb, type: 3}
+  volume: 0.9
+  pitchRange: {x: 0.94, y: 1.06}
+  spatialBlend: 1
+  spatialize: 0
+  loop: 0
+  minDistance: 1
+  maxDistance: 18
+  output: {fileID: 0}

@@ -75,12 +75,14 @@ MonoBehaviour:
   destroyWeaponOnHit: 1
   chaseSpeed: 1
   repathInterval: 0.5
-  meleeRange: 1.6
-  telegraphDuration: 0.8
-  lungeDuration: 0.45
+  meleeRange: 1.2
+  telegraphDuration: 1.25
+  lungeDuration: 0.9
   lungeSpeed: 4
+  chargeAnimationSpeed: 0.6
+  attackAnimationSpeed: 0.55
   hitRadius: 1
-  attackDamage: 1
+  attackDamage: 10
   vulnerableArcDegrees: 60
   zoneRotationInterval: 5
   vulnerableIndicator: {fileID: 3329684674158641734}
