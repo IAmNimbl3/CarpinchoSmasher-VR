@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -30,6 +31,10 @@ public class GameRoundManager : MonoBehaviour
     [SerializeField] private Color roundUiButtonHoverColor = new Color(0.2f, 0.9f, 1f, 0.95f);
     [SerializeField, Min(0.001f)] private float roundUiRayWidth = 0.012f;
 
+    [Header("Round Countdown")]
+    [SerializeField, Min(1)] private int countdownStartNumber = 3;
+    [SerializeField, Min(0.05f)] private float countdownStepDuration = 0.55f;
+
     [Header("Scoring")]
     [SerializeField, Min(0)] private int defaultScorePerKill = 10;
 
@@ -53,6 +58,8 @@ public class GameRoundManager : MonoBehaviour
     private int _pendingNextPhaseIndex = -1;
     private bool _defeatActive;
     private bool _victoryActive;
+    private bool _roundCountdownActive;
+    private Coroutine _roundCountdownCoroutine;
 
     private Canvas _roundCanvas;
     private RectTransform _roundCanvasRect;
@@ -137,6 +144,11 @@ public class GameRoundManager : MonoBehaviour
 
     private void Update()
     {
+        if (_roundCountdownActive)
+        {
+            return;
+        }
+
         if (_defeatActive)
         {
             TryClickRoundUiWithControllerRay();
@@ -204,12 +216,15 @@ public class GameRoundManager : MonoBehaviour
         _roundEndPending = false;
         _pendingNextPhaseIndex = -1;
         _victoryActive = false;
-        HideRoundUi();
+        RestorePlayerHealthToMax();
 
-        if (spawner != null)
+        StartRoundCountdown(() =>
         {
-            spawner.ResumeSpawning();
-        }
+            if (spawner != null)
+            {
+                spawner.ResumeSpawning();
+            }
+        });
     }
 
     public void RetryCurrentPhase()
@@ -219,18 +234,16 @@ public class GameRoundManager : MonoBehaviour
         WaitingForNextRound = false;
         _roundEndPending = false;
         _pendingNextPhaseIndex = -1;
-        HideRoundUi();
         ClearTrackedEnemies();
+        RestorePlayerHealthToMax();
 
-        if (playerHealth != null)
+        StartRoundCountdown(() =>
         {
-            playerHealth.ResetHealth();
-        }
-
-        if (spawner != null)
-        {
-            spawner.RestartCurrentPhase();
-        }
+            if (spawner != null)
+            {
+                spawner.RestartCurrentPhase();
+            }
+        });
     }
 
     public void ReturnToMenu()
@@ -414,6 +427,72 @@ public class GameRoundManager : MonoBehaviour
         _subscribedEnemies.Clear();
     }
 
+    private void RestorePlayerHealthToMax()
+    {
+        if (playerHealth != null)
+        {
+            playerHealth.ResetHealth();
+        }
+    }
+
+    private void StartRoundCountdown(Action onComplete)
+    {
+        if (_roundCountdownCoroutine != null)
+        {
+            StopCoroutine(_roundCountdownCoroutine);
+        }
+
+        _roundCountdownCoroutine = StartCoroutine(RunRoundCountdown(onComplete));
+    }
+
+    private IEnumerator RunRoundCountdown(Action onComplete)
+    {
+        _roundCountdownActive = true;
+        RestoreRoundButtonHoverColors();
+        SetRoundRayVisualsVisible(false);
+        ShowCountdownUi(countdownStartNumber);
+
+        for (int value = countdownStartNumber; value > 0; value--)
+        {
+            ShowCountdownUi(value);
+            yield return new WaitForSeconds(countdownStepDuration);
+        }
+
+        _roundCountdownActive = false;
+        _roundCountdownCoroutine = null;
+        HideRoundUi();
+        onComplete?.Invoke();
+    }
+
+    private void ShowCountdownUi(int value)
+    {
+        if (_roundCanvas == null)
+        {
+            CreateRoundUi();
+        }
+
+        if (_roundCanvas == null)
+        {
+            return;
+        }
+
+        _titleText.text = value.ToString();
+        _titleText.fontSize = 96;
+        _bodyText.text = string.Empty;
+
+        if (_continueButton != null)
+        {
+            _continueButton.gameObject.SetActive(false);
+        }
+
+        if (_secondaryButton != null)
+        {
+            _secondaryButton.gameObject.SetActive(false);
+        }
+
+        _roundCanvas.gameObject.SetActive(true);
+    }
+
     private void TryShowPendingRoundComplete()
     {
         if (!_roundEndPending || WaitingForNextRound)
@@ -457,10 +536,12 @@ public class GameRoundManager : MonoBehaviour
         string nextLabel = spawner != null ? spawner.GetPhaseLabel(nextPhaseIndex) : string.Empty;
 
         _titleText.text = $"Ronda {completedRound} terminada";
+        _titleText.fontSize = 42;
         _bodyText.text = string.IsNullOrEmpty(nextLabel)
             ? $"Puntaje: {Score}\nPreparado para la ronda {nextRound}"
             : $"Puntaje: {Score}\nSiguiente: {nextLabel}";
 
+        _continueButton.gameObject.SetActive(true);
         ConfigureButton(_continueButton, "Iniciar siguiente ronda", ContinueToNextRound);
         SetButtonAnchors(_continueButton, new Vector2(0.25f, 0.09f), new Vector2(0.75f, 0.27f));
         if (_secondaryButton != null)
@@ -485,8 +566,10 @@ public class GameRoundManager : MonoBehaviour
 
         int health = playerHealth != null ? playerHealth.CurrentHealth : 0;
         _titleText.text = "Perdiste";
+        _titleText.fontSize = 42;
         _bodyText.text = $"Vida: {health}\nPuntaje: {Score}";
 
+        _continueButton.gameObject.SetActive(true);
         ConfigureButton(_continueButton, "Reintentar fase", RetryCurrentPhase);
         SetButtonAnchors(_continueButton, new Vector2(0.08f, 0.09f), new Vector2(0.48f, 0.27f));
 
@@ -513,8 +596,10 @@ public class GameRoundManager : MonoBehaviour
         }
 
         _titleText.text = "GANASTE";
+        _titleText.fontSize = 42;
         _bodyText.text = $"Puntaje: {Score}\n{BuildKillsSummary()}";
 
+        _continueButton.gameObject.SetActive(true);
         ConfigureButton(_continueButton, "Volver al menu", ReturnToMenu);
         SetButtonAnchors(_continueButton, new Vector2(0.25f, 0.09f), new Vector2(0.75f, 0.27f));
 

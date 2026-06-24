@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class StartMenuIntroFlow : MonoBehaviour
@@ -19,15 +20,31 @@ public class StartMenuIntroFlow : MonoBehaviour
     [SerializeField] private bool hideIntroLogoWhenMenuActivates = true;
 
     [Header("Teleport Floor Visuals")]
-    [SerializeField] private bool createTeleportFloorVisuals = true;
+    [SerializeField] private bool createTeleportFloorVisuals;
     [SerializeField] private Transform trophiesTeleportPoint;
     [SerializeField] private string trophiesTeleportPointName = "Teleport_TrophiesShelf";
     [SerializeField] private Material teleportFloorVisualMaterial;
     [SerializeField] private Vector3 teleportFloorVisualScale = new Vector3(1.4f, 0.015f, 1.4f);
     [SerializeField, Min(0f)] private float teleportFloorOffset = 0.02f;
+    [SerializeField] private bool showTeleportVisualOnlyWhenAimed;
+    [SerializeField, Min(0.05f)] private float teleportAimRadius = 0.9f;
+    [SerializeField, Min(0.5f)] private float teleportAimRayLength = 12f;
+    [SerializeField, Range(0f, 1f)] private float teleportVisualIdleAlpha = 0.14f;
+    [SerializeField, Range(0f, 1f)] private float teleportVisualHoverAlpha = 0.42f;
+    [SerializeField, Min(0f)] private float teleportVisualHoverEmissionMultiplier = 1.35f;
+
+    [Header("Controller Teleport")]
+    [SerializeField] private bool useControllerRayTeleport = true;
+    [SerializeField, Min(0.05f)] private float controllerTeleportAimRadius = 0.9f;
+    [SerializeField, Min(0.5f)] private float controllerTeleportRayLength = 12f;
+    [SerializeField] private bool preserveInitialRigHeightOnTeleport = true;
 
     private bool _menuActivated;
     private Material _runtimeTeleportVisualMaterial;
+    private readonly List<TeleportFloorVisual> _teleportFloorVisuals = new List<TeleportFloorVisual>();
+    private readonly List<TeleportHotspotVisual> _teleportHotspotVisuals = new List<TeleportHotspotVisual>();
+    private float _initialRigRootY;
+    private bool _hasInitialRigRootY;
 
     private IEnumerator Start()
     {
@@ -45,13 +62,18 @@ public class StartMenuIntroFlow : MonoBehaviour
         ResolveRigReferences();
         ConfigurePlayerBounds();
         MoveRigTo(initialSpawnPoint);
+        StoreInitialRigHeight();
         CreateTeleportFloorVisuals();
+        ResolveTeleportHotspotVisuals();
     }
 
     private void Update()
     {
+        UpdateControllerRayTeleport();
+
         if (_menuActivated || tvTeleportPoint == null || tvMenuRoot == null)
         {
+            UpdateTeleportFloorVisualHover();
             return;
         }
 
@@ -59,6 +81,7 @@ public class StartMenuIntroFlow : MonoBehaviour
 
         if (centerEyeAnchor == null)
         {
+            UpdateTeleportFloorVisualHover();
             return;
         }
 
@@ -69,6 +92,8 @@ public class StartMenuIntroFlow : MonoBehaviour
         {
             ActivateTvMenu();
         }
+
+        UpdateTeleportFloorVisualHover();
     }
 
     private void ActivateTvMenu()
@@ -140,6 +165,44 @@ public class StartMenuIntroFlow : MonoBehaviour
             Quaternion.LookRotation(targetForward, Vector3.up));
     }
 
+    private void MoveRigToTeleportTarget(Transform target)
+    {
+        if (cameraRig == null || target == null)
+        {
+            return;
+        }
+
+        Transform rigTransform = cameraRig.transform;
+        Vector3 targetForward = Vector3.ProjectOnPlane(target.forward, Vector3.up).normalized;
+        if (targetForward.sqrMagnitude < 0.001f)
+        {
+            targetForward = Vector3.ProjectOnPlane(rigTransform.forward, Vector3.up).normalized;
+        }
+        if (targetForward.sqrMagnitude < 0.001f)
+        {
+            targetForward = Vector3.forward;
+        }
+
+        float targetY = preserveInitialRigHeightOnTeleport && _hasInitialRigRootY
+            ? _initialRigRootY
+            : rigTransform.position.y;
+
+        rigTransform.SetPositionAndRotation(
+            new Vector3(target.position.x, targetY, target.position.z),
+            Quaternion.LookRotation(targetForward, Vector3.up));
+    }
+
+    private void StoreInitialRigHeight()
+    {
+        if (cameraRig == null)
+        {
+            return;
+        }
+
+        _initialRigRootY = cameraRig.transform.position.y;
+        _hasInitialRigRootY = true;
+    }
+
     private void CreateTeleportFloorVisuals()
     {
         if (!createTeleportFloorVisuals)
@@ -150,6 +213,32 @@ public class StartMenuIntroFlow : MonoBehaviour
         ResolveTeleportReferences();
         CreateTeleportFloorVisual(tvTeleportPoint, "Teleport_FrontOfTV_FloorVisual");
         CreateTeleportFloorVisual(trophiesTeleportPoint, "Teleport_TrophiesShelf_FloorVisual");
+    }
+
+    private void ResolveTeleportHotspotVisuals()
+    {
+        _teleportHotspotVisuals.Clear();
+        AddTeleportHotspotVisual(tvTeleportPoint);
+        AddTeleportHotspotVisual(trophiesTeleportPoint);
+    }
+
+    private void AddTeleportHotspotVisual(Transform teleportTarget)
+    {
+        if (teleportTarget == null)
+        {
+            return;
+        }
+
+        TeleportHotspotVisual visual = teleportTarget.GetComponent<TeleportHotspotVisual>();
+        if (visual == null)
+        {
+            visual = teleportTarget.GetComponentInChildren<TeleportHotspotVisual>(true);
+        }
+
+        if (visual != null && !_teleportHotspotVisuals.Contains(visual))
+        {
+            _teleportHotspotVisuals.Add(visual);
+        }
     }
 
     private void CreateTeleportFloorVisual(Transform teleportTarget, string objectName)
@@ -182,6 +271,10 @@ public class StartMenuIntroFlow : MonoBehaviour
         TeleportFloorVisualProjector projector = visual.AddComponent<TeleportFloorVisualProjector>();
         projector.Configure(teleportTarget, visual.transform, teleportFloorOffset);
         projector.ProjectVisualToFloor();
+
+        var floorVisual = new TeleportFloorVisual(teleportTarget, visual.transform, renderer);
+        _teleportFloorVisuals.Add(floorVisual);
+        ApplyTeleportFloorVisualHover(floorVisual, !showTeleportVisualOnlyWhenAimed);
     }
 
     private Material GetTeleportFloorVisualMaterial()
@@ -193,6 +286,16 @@ public class StartMenuIntroFlow : MonoBehaviour
 
         if (_runtimeTeleportVisualMaterial != null)
         {
+            return _runtimeTeleportVisualMaterial;
+        }
+
+        Material resourceMaterial = Resources.Load<Material>("M_TeleportHotspotGTA");
+        if (resourceMaterial != null)
+        {
+            _runtimeTeleportVisualMaterial = new Material(resourceMaterial)
+            {
+                name = "Runtime_TeleportHotspotGTA"
+            };
             return _runtimeTeleportVisualMaterial;
         }
 
@@ -222,5 +325,217 @@ public class StartMenuIntroFlow : MonoBehaviour
     {
         Vector3 flatForward = Vector3.ProjectOnPlane(forward, Vector3.up);
         return flatForward.sqrMagnitude > 0.0001f ? flatForward.normalized : Vector3.forward;
+    }
+
+    private void UpdateTeleportFloorVisualHover()
+    {
+        if (_teleportFloorVisuals.Count == 0)
+        {
+            return;
+        }
+
+        bool hasRightRay = TryGetControllerRay(OVRInput.Controller.RTouch, out Vector3 rightOrigin, out Vector3 rightDirection);
+        bool hasLeftRay = TryGetControllerRay(OVRInput.Controller.LTouch, out Vector3 leftOrigin, out Vector3 leftDirection);
+
+        for (int i = 0; i < _teleportFloorVisuals.Count; i++)
+        {
+            TeleportFloorVisual floorVisual = _teleportFloorVisuals[i];
+            bool isAimed = false;
+
+            if (floorVisual.VisualRoot != null)
+            {
+                Vector3 markerPosition = floorVisual.VisualRoot.position;
+                isAimed = (hasRightRay && IsPointNearRay(markerPosition, rightOrigin, rightDirection))
+                    || (hasLeftRay && IsPointNearRay(markerPosition, leftOrigin, leftDirection));
+            }
+
+            ApplyTeleportFloorVisualHover(floorVisual, isAimed);
+        }
+    }
+
+    private void UpdateControllerRayTeleport()
+    {
+        if (!useControllerRayTeleport)
+        {
+            return;
+        }
+
+        ResolveTeleportReferences();
+        if (_teleportHotspotVisuals.Count == 0)
+        {
+            ResolveTeleportHotspotVisuals();
+        }
+
+        bool hasRightRay = TryGetControllerRay(OVRInput.Controller.RTouch, out Vector3 rightOrigin, out Vector3 rightDirection);
+        bool hasLeftRay = TryGetControllerRay(OVRInput.Controller.LTouch, out Vector3 leftOrigin, out Vector3 leftDirection);
+        Transform hoveredTarget = null;
+
+        if (hasRightRay)
+        {
+            hoveredTarget = FindTeleportTargetNearRay(rightOrigin, rightDirection);
+        }
+
+        if (hoveredTarget == null && hasLeftRay)
+        {
+            hoveredTarget = FindTeleportTargetNearRay(leftOrigin, leftDirection);
+        }
+
+        ApplyTeleportHotspotHover(hoveredTarget);
+
+        if (hoveredTarget == null)
+        {
+            return;
+        }
+
+        bool rightPressed = OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch)
+            || OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger, OVRInput.Controller.RTouch);
+        bool leftPressed = OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch)
+            || OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger, OVRInput.Controller.LTouch);
+
+        if (rightPressed || leftPressed)
+        {
+            MoveRigToTeleportTarget(hoveredTarget);
+            GameAudioEvents.RaiseMenuTeleported(hoveredTarget.position);
+        }
+    }
+
+    private Transform FindTeleportTargetNearRay(Vector3 origin, Vector3 direction)
+    {
+        Transform bestTarget = null;
+        float bestDistance = float.PositiveInfinity;
+
+        CheckTeleportTargetNearRay(tvTeleportPoint, origin, direction, ref bestTarget, ref bestDistance);
+        CheckTeleportTargetNearRay(trophiesTeleportPoint, origin, direction, ref bestTarget, ref bestDistance);
+
+        return bestTarget;
+    }
+
+    private void CheckTeleportTargetNearRay(Transform target, Vector3 origin, Vector3 direction, ref Transform bestTarget, ref float bestDistance)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        Vector3 normalizedDirection = direction.normalized;
+        float alongRay = Vector3.Dot(target.position - origin, normalizedDirection);
+        if (alongRay < 0f || alongRay > controllerTeleportRayLength)
+        {
+            return;
+        }
+
+        Vector3 closestPoint = origin + normalizedDirection * alongRay;
+        float distance = Vector3.Distance(target.position, closestPoint);
+        if (distance > controllerTeleportAimRadius || distance >= bestDistance)
+        {
+            return;
+        }
+
+        bestDistance = distance;
+        bestTarget = target;
+    }
+
+    private void ApplyTeleportHotspotHover(Transform hoveredTarget)
+    {
+        for (int i = 0; i < _teleportHotspotVisuals.Count; i++)
+        {
+            TeleportHotspotVisual visual = _teleportHotspotVisuals[i];
+            if (visual == null)
+            {
+                continue;
+            }
+
+            bool hover = hoveredTarget != null && visual.transform == hoveredTarget;
+            visual.SetHover(hover);
+        }
+    }
+
+    private bool TryGetControllerRay(OVRInput.Controller controller, out Vector3 origin, out Vector3 direction)
+    {
+        ResolveRigReferences();
+
+        bool controllerConnected = (OVRInput.GetConnectedControllers() & controller) == controller;
+        if (controllerConnected && cameraRig != null && cameraRig.trackingSpace != null)
+        {
+            Vector3 localPosition = OVRInput.GetLocalControllerPosition(controller);
+            Quaternion localRotation = OVRInput.GetLocalControllerRotation(controller);
+            origin = cameraRig.trackingSpace.TransformPoint(localPosition);
+            direction = cameraRig.trackingSpace.rotation * (localRotation * Vector3.forward);
+            return direction.sqrMagnitude > 0.0001f;
+        }
+
+        origin = Vector3.zero;
+        direction = Vector3.forward;
+        return false;
+    }
+
+    private bool IsPointNearRay(Vector3 point, Vector3 origin, Vector3 direction)
+    {
+        Vector3 normalizedDirection = direction.normalized;
+        float alongRay = Vector3.Dot(point - origin, normalizedDirection);
+        if (alongRay < 0f || alongRay > teleportAimRayLength)
+        {
+            return false;
+        }
+
+        Vector3 closestPoint = origin + normalizedDirection * alongRay;
+        return Vector3.Distance(point, closestPoint) <= teleportAimRadius;
+    }
+
+    private void ApplyTeleportFloorVisualHover(TeleportFloorVisual floorVisual, bool hover)
+    {
+        if (floorVisual.Renderer == null)
+        {
+            return;
+        }
+
+        bool visible = hover || !showTeleportVisualOnlyWhenAimed || teleportVisualIdleAlpha > 0f;
+        floorVisual.Renderer.enabled = visible;
+
+        if (!visible)
+        {
+            return;
+        }
+
+        Material material = floorVisual.Renderer.material;
+        float alpha = hover ? teleportVisualHoverAlpha : teleportVisualIdleAlpha;
+        Color baseColor = new Color(1f, 0.18f, 0.28f, 1f);
+        Color emissionColor = new Color(1f, 0.1f, 0.18f, 1f) * (hover ? teleportVisualHoverEmissionMultiplier : 1f);
+
+        if (material.HasProperty("_Alpha"))
+        {
+            material.SetFloat("_Alpha", alpha);
+        }
+
+        if (material.HasProperty("_BaseColor"))
+        {
+            material.SetColor("_BaseColor", baseColor);
+        }
+
+        if (material.HasProperty("_EmissionColor"))
+        {
+            material.SetColor("_EmissionColor", emissionColor);
+        }
+
+        if (material.HasProperty("_Color"))
+        {
+            Color fallbackColor = baseColor;
+            fallbackColor.a = alpha;
+            material.SetColor("_Color", fallbackColor);
+        }
+    }
+
+    private readonly struct TeleportFloorVisual
+    {
+        public TeleportFloorVisual(Transform target, Transform visualRoot, Renderer renderer)
+        {
+            Target = target;
+            VisualRoot = visualRoot;
+            Renderer = renderer;
+        }
+
+        public Transform Target { get; }
+        public Transform VisualRoot { get; }
+        public Renderer Renderer { get; }
     }
 }

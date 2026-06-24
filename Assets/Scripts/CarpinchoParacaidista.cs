@@ -11,6 +11,18 @@ public class CarpinchoParacaidista : Enemy
     [Tooltip("Si estÃ¡ activo, gira para mirar al jugador durante la caÃ­da.")]
     [SerializeField] private bool facePlayer = true;
 
+    [Header("Zona de caida")]
+    [Tooltip("Si esta activo, el paracaidista elige una zona fija delante o detras del jugador al spawnear en vez de caer sobre su cabeza.")]
+    [SerializeField] private bool usePlayerRelativeLandingZones = true;
+    [Tooltip("Distancia horizontal desde el jugador hasta el centro de la zona de caida.")]
+    [SerializeField, Min(0f)] private float landingZoneDistance = 1.65f;
+    [Tooltip("Variacion lateral aleatoria de la zona de caida.")]
+    [SerializeField, Min(0f)] private float landingZoneLateralRadius = 0.6f;
+    [Tooltip("Variacion aleatoria adelante/atras alrededor del centro de la zona.")]
+    [SerializeField, Min(0f)] private float landingZoneForwardRadius = 0.35f;
+    [Tooltip("Si esta activo, el punto de spawn se reposiciona sobre la zona elegida conservando la altura.")]
+    [SerializeField] private bool spawnAboveLandingZone = true;
+
     [Header("Impacto en suelo")]
     [Tooltip("Y del suelo de la arena.")]
     [SerializeField] private float groundY = 0f;
@@ -28,6 +40,8 @@ public class CarpinchoParacaidista : Enemy
     [SerializeField] private GameObject explosionVfx;
 
     private bool _exploded;
+    private Vector3 _landingTarget;
+    private bool _hasLandingTarget;
 
     public override CarpinchoType Type => CarpinchoType.Paracaidista;
 
@@ -35,6 +49,12 @@ public class CarpinchoParacaidista : Enemy
     {
         base.OnSpawned(position, rotation);
         _exploded = false;
+        PickLandingTarget();
+
+        if (spawnAboveLandingZone && _hasLandingTarget)
+        {
+            transform.position = new Vector3(_landingTarget.x, transform.position.y, _landingTarget.z);
+        }
     }
 
     private void Update()
@@ -48,7 +68,15 @@ public class CarpinchoParacaidista : Enemy
         Vector3 position = previousPosition;
         position.y -= fallSpeed * Time.deltaTime;
 
-        if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
+        if (_hasLandingTarget)
+        {
+            Vector3 currentHorizontal = new Vector3(position.x, 0f, position.z);
+            Vector3 targetHorizontal = new Vector3(_landingTarget.x, 0f, _landingTarget.z);
+            Vector3 nextHorizontal = Vector3.MoveTowards(currentHorizontal, targetHorizontal, horizontalSpeed * Time.deltaTime);
+            position.x = nextHorizontal.x;
+            position.z = nextHorizontal.z;
+        }
+        else if (PlayerTarget.TryGetPosition(out Vector3 playerPos))
         {
             Vector3 currentHorizontal = new Vector3(position.x, 0f, position.z);
             Vector3 targetHorizontal = new Vector3(playerPos.x, 0f, playerPos.z);
@@ -63,6 +91,15 @@ public class CarpinchoParacaidista : Enemy
                 {
                     transform.rotation = Quaternion.LookRotation(lookDir);
                 }
+            }
+        }
+
+        if (facePlayer && _hasLandingTarget && PlayerTarget.TryGetPosition(out Vector3 lookPlayerPos))
+        {
+            Vector3 lookDir = new Vector3(lookPlayerPos.x - position.x, 0f, lookPlayerPos.z - position.z);
+            if (lookDir.sqrMagnitude > 0.0001f)
+            {
+                transform.rotation = Quaternion.LookRotation(lookDir);
             }
         }
 
@@ -125,6 +162,41 @@ public class CarpinchoParacaidista : Enemy
         Die();
     }
 
+    private void PickLandingTarget()
+    {
+        _hasLandingTarget = false;
+
+        if (!usePlayerRelativeLandingZones || !PlayerTarget.TryGetPosition(out Vector3 playerPos))
+        {
+            return;
+        }
+
+        Vector3 forward = ResolvePlayerForward();
+        Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+        float frontOrBack = UnityEngine.Random.value < 0.5f ? -1f : 1f;
+        float forwardJitter = UnityEngine.Random.Range(-landingZoneForwardRadius, landingZoneForwardRadius);
+        float lateralJitter = UnityEngine.Random.Range(-landingZoneLateralRadius, landingZoneLateralRadius);
+
+        Vector3 offset = forward * (frontOrBack * landingZoneDistance + forwardJitter)
+            + right * lateralJitter;
+        _landingTarget = new Vector3(playerPos.x + offset.x, groundY, playerPos.z + offset.z);
+        _hasLandingTarget = true;
+    }
+
+    private Vector3 ResolvePlayerForward()
+    {
+        Transform target = PlayerTarget.Transform;
+        Vector3 forward = target != null ? target.forward : Vector3.forward;
+        forward = Vector3.ProjectOnPlane(forward, Vector3.up);
+
+        if (forward.sqrMagnitude < 0.0001f)
+        {
+            forward = Vector3.forward;
+        }
+
+        return forward.normalized;
+    }
+
     private bool TryGetGroundImpact(Vector3 previousPosition, Vector3 nextPosition, out RaycastHit groundHit)
     {
         float topY = Mathf.Max(previousPosition.y, nextPosition.y) + groundProbeHeight;
@@ -163,5 +235,11 @@ public class CarpinchoParacaidista : Enemy
     {
         Gizmos.color = new Color(1f, 0.3f, 0.1f, 0.35f);
         Gizmos.DrawWireSphere(transform.position, explosionRadius);
+
+        if (_hasLandingTarget)
+        {
+            Gizmos.color = new Color(1f, 0.8f, 0.1f, 0.7f);
+            Gizmos.DrawWireSphere(_landingTarget, 0.25f);
+        }
     }
 }
