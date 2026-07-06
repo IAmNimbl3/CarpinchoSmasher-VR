@@ -9921,7 +9921,7 @@ MonoBehaviour:
   initialSpawnPoint: {fileID: 2012438272}
   introLogoRoot: {fileID: 1185133151}
   tvTeleportPoint: {fileID: 411808771}
-  tvMenuRoot: {fileID: 1282428325}
+  tvMenuRoot: {fileID: 1593549919}
   activationRadius: 0.8
   hideIntroLogoWhenMenuActivates: 1
   createTeleportFloorVisuals: 0
@@ -66908,7 +66908,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1282428326
 RectTransform:
   m_ObjectHideFlags: 0
@@ -66917,17 +66917,18 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1282428325}
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0.000001430511}
-  m_LocalPosition: {x: 0, y: 0, z: 0.13935775}
+  m_LocalPosition: {x: 0, y: 0, z: 0.019}
   m_LocalScale: {x: 0.0011409618, y: 0.0011409618, z: 0.0011409618}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1408149232}
   - {fileID: 1593549920}
   m_Father: {fileID: 5504916643417719616}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.00000037529554, y: 0.34351557}
-  m_SizeDelta: {x: 1000, y: 560}
+  m_AnchoredPosition: {x: -0, y: 0.399}
+  m_SizeDelta: {x: 1120, y: 470}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1282428327
 MonoBehaviour:
@@ -67137,7 +67138,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.Surfaces.BoundsClipper
   _position: {x: 0, y: 0, z: 0}
-  _size: {x: 1000, y: 560, z: 0.01}
+  _size: {x: 1120, y: 470, z: 0.01}
 --- !u!114 &1282428332
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -73226,6 +73227,81 @@ Transform:
   - {fileID: 195791670}
   m_Father: {fileID: 214045112}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1408149231
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1408149232}
+  - component: {fileID: 1408149234}
+  - component: {fileID: 1408149233}
+  m_Layer: 0
+  m_Name: Background
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1408149232
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1408149231}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1282428326}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1408149233
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1408149231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.36862746, g: 0.39607847, b: 0.41176474, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1408149234
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1408149231}
+  m_CullTransparentMesh: 1
 --- !u!1 &1408768305
 GameObject:
   m_ObjectHideFlags: 0
@@ -83069,7 +83145,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1593549920
 RectTransform:
   m_ObjectHideFlags: 0
@@ -83079,8 +83155,8 @@ RectTransform:
   m_GameObject: {fileID: 1593549919}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 632379563}
   - {fileID: 437569947}
