@@ -45,6 +45,10 @@ public class GameRoundManager : MonoBehaviour
     [Header("Defeat")]
     [SerializeField] private string menuSceneName = "Sample Optimizada";
 
+    [Header("Victory")]
+    [Tooltip("Scene with the win cinematic, loaded from the victory screen. Falls back to the menu if unset or not in Build Settings.")]
+    [SerializeField] private string victoryCinematicSceneName = "WinCinematic";
+
     [Header("Health HUD")]
     [SerializeField] private bool createHealthHudOnAwake = true;
     [SerializeField] private Vector2 healthHudSize = new Vector2(320f, 72f);
@@ -273,6 +277,19 @@ public class GameRoundManager : MonoBehaviour
         }
 
         SceneManager.LoadScene(menuSceneName);
+    }
+
+    public void GoToVictoryCinematic()
+    {
+        if (!string.IsNullOrEmpty(victoryCinematicSceneName)
+            && Application.CanStreamedLevelBeLoaded(victoryCinematicSceneName))
+        {
+            SceneManager.LoadScene(victoryCinematicSceneName);
+            return;
+        }
+
+        Debug.LogWarning($"[GameRoundManager] Victory cinematic scene '{victoryCinematicSceneName}' is unavailable; returning to menu.", this);
+        ReturnToMenu();
     }
 
     private void ResolveReferences()
@@ -615,7 +632,7 @@ public class GameRoundManager : MonoBehaviour
         _bodyText.text = $"Puntaje: {Score}\n{BuildKillsSummary()}";
 
         _continueButton.gameObject.SetActive(true);
-        ConfigureButton(_continueButton, "Volver al menu", ReturnToMenu);
+        ConfigureButton(_continueButton, "Continuar", GoToVictoryCinematic);
         SetButtonAnchors(_continueButton, new Vector2(0.25f, 0.09f), new Vector2(0.75f, 0.27f));
 
         if (_secondaryButton != null)
