@@ -61,6 +61,10 @@ public class ThrownHammer : MonoBehaviour
     public event Action<ThrownHammer> Grabbed;
     public event Action<ThrownHammer> Released;
 
+    public bool IsLaunched => _state == HammerState.Launched;
+    public bool IsHeld => _state == HammerState.Held;
+    public bool IsHolstered => _state == HammerState.Holstered;
+
     private void Awake()
     {
         CacheReferences();

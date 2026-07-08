@@ -624,6 +624,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 21d2014ae201db14db1d40bbd61e5651, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8422397792677837539}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 21d2014ae201db14db1d40bbd61e5651, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6642080912365021370}
   m_SourcePrefab: {fileID: 100100000, guid: 21d2014ae201db14db1d40bbd61e5651, type: 3}
 --- !u!33 &1201550644803757898 stripped
 MeshFilter:
@@ -776,6 +779,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HammerDamageDealer
   damageEnabled: 0
+--- !u!114 &6642080912365021370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4527349563257950671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd28135a17022094d855c7649e5a5109, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HammerAimAssist
+  assistEnabled: 1
+  assistRadius: 0.55
+  maxCandidateDistance: 4
+  targetOffset: {x: 0, y: 0.35, z: 0}
+  lockDuration: 0.35
+  minRedirectSpeed: 5
+  maxRedirectSpeed: 16
+  redirectSpeedMultiplier: 1.15
+  allowRetargetAfterLock: 0
+  drawGizmos: 0
+  gizmoColor: {r: 0.2, g: 0.9, b: 1, a: 0.35}
 --- !u!114 &8422397792677837539
 MonoBehaviour:
   m_ObjectHideFlags: 0
