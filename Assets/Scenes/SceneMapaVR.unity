@@ -30200,7 +30200,7 @@ MonoBehaviour:
   hammerPrefab: {fileID: 4527349563257950671, guid: 7eaa516df6eeed64f9f3e8b81509da9d, type: 3}
   useHeadHeightForHolster: 0
   followViewYaw: 1
-  holsterOffsetFromPlayer: {x: 0.12, y: -0.72, z: 0.02}
+  holsterOffsetFromPlayer: {x: 0.12, y: -0.8, z: 0.02}
   seatedHolsterOffsetFromPlayer: {x: 0.3, y: -0.32, z: 0.12}
   holsterEulerAngles: {x: 0, y: -90, z: -145}
   respawnDelayAfterThrow: 0.25

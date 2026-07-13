@@ -65,6 +65,26 @@ public class ThrownHammer : MonoBehaviour
     public bool IsHeld => _state == HammerState.Held;
     public bool IsHolstered => _state == HammerState.Holstered;
 
+    public void DestroyAfterLaunchedHit()
+    {
+        if (_state != HammerState.Launched)
+        {
+            return;
+        }
+
+        CancelPendingRelease();
+        SetGripHighlightsVisible(false);
+
+        if (_damageDealer != null)
+        {
+            _damageDealer.SetDamageEnabled(false);
+        }
+
+        SetColliders(enabled: false, forceTrigger: false);
+        NotifyReleased();
+        Destroy(gameObject);
+    }
+
     private void Awake()
     {
         CacheReferences();
