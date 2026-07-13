@@ -738,10 +738,10 @@ MonoBehaviour:
   - {fileID: 4744274453852005345}
   disableNonGrabbableCollidersWhileHolstered: 1
   snapGripToNearestControllerOnGrab: 1
-  snapActivationDistance: 0.16
+  snapActivationDistance: 0.12
   holsteredGripColliderPadding: 0.07
   showGripAreaHighlight: 1
-  highlightActivationDistance: 0.06
+  highlightActivationDistance: 0.12
   gripHighlighter: {fileID: 8422397792677837539}
 --- !u!114 &3873126128900222377
 MonoBehaviour:
