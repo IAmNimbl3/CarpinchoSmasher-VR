@@ -21,40 +21,39 @@ public class VrFpsHud : MonoBehaviour
 
     [Header("Readout")]
     [SerializeField] private Text label;
-    [SerializeField] private Color textColor = new Color(0.4f, 1f, 0.4f); // always green
-    [Tooltip("0..1 — lower is smoother/steadier, higher reacts faster.")]
-    [SerializeField] private float sampleSmoothing = 0.1f;
-    [SerializeField] private float refreshInterval = 0.25f;
-    [Tooltip("Used only to seed the initial reading.")]
-    [SerializeField] private float targetFps = 72f;
+    private float updateInterval = 0.5f;
+    private float accumulatedDeltaTime = 0f;
+    private int frames = 0;
+    private float timeRemaining;
 
-    private float smoothedFps;
-    private float refreshTimer;
     private Vector3 posVel;
 
     private void Awake()
     {
         if (head == null && Camera.main != null) head = Camera.main.transform;
-        smoothedFps = targetFps;
-        if (label != null) label.color = textColor;
         // Snap to the start position so it doesn't fly in from the origin on the first frame.
         SnapToTarget();
     }
 
+    private void Start()
+    {
+        timeRemaining = updateInterval;
+    }
+
     private void Update()
     {
-        float dt = Time.unscaledDeltaTime;
-        if (dt > 0f)
-        {
-            float fps = 1f / dt;
-            smoothedFps = Mathf.Lerp(smoothedFps, fps, sampleSmoothing);
-        }
+        timeRemaining -= Time.unscaledDeltaTime;
+        accumulatedDeltaTime += Time.unscaledDeltaTime;
+        frames++;
 
-        refreshTimer -= Time.unscaledDeltaTime;
-        if (refreshTimer <= 0f && label != null)
+        if (timeRemaining <= 0.0f)
         {
-            refreshTimer = refreshInterval;
-            label.text = Mathf.RoundToInt(smoothedFps) + " FPS";
+            float currentFps = frames / accumulatedDeltaTime;
+            label.text = Mathf.Round(currentFps).ToString();
+
+            timeRemaining = updateInterval;
+            accumulatedDeltaTime = 0f;
+            frames = 0;
         }
     }
 
