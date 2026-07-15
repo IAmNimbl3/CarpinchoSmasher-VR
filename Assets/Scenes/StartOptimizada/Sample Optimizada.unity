@@ -53157,6 +53157,12 @@ MonoBehaviour:
     localPosition: {x: 0.34, y: 1.29, z: 0.4}
     localEulerAngles: {x: 0, y: 0, z: 0}
     targetHeight: 0.28
+  makeTrophiesGrabbable: 1
+  trophyMass: 0.25
+  colliderPadding: 0.025
+  snapRearmDelay: 0.35
+  outlineColor: {r: 0.0199715, g: 0.9622642, b: 0.9320438, a: 0.65}
+  outlineWidth: 0.025
 --- !u!1 &1013667303
 GameObject:
   m_ObjectHideFlags: 0
