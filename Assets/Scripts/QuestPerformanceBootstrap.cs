@@ -5,21 +5,29 @@ using UnityEngine;
 /// GameObject, so it can't be skipped by a missing reference in a scene.
 public static class QuestPerformanceBootstrap
 {
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Apply()
     {
-        // Target a refresh rate every Quest headset (2/3/3S/Pro) supports, so "72fps or
-        // more" is measured against a display frequency the hardware can actually hold.
-        OVRPlugin.systemDisplayFrequency = 72.0f;
+        // Uncap the refresh rate: the compositor always paces to a fixed display
+        // frequency (there's no true "unlimited" fps in VR), so instead of pinning to
+        // 72Hz, use whichever rate is highest among what this specific headset reports.
+        float[] availableFrequencies = OVRManager.display != null
+            ? OVRManager.display.displayFrequenciesAvailable
+            : null;
+        if (availableFrequencies != null && availableFrequencies.Length > 0)
+        {
+            float maxFrequency = availableFrequencies[0];
+            for (int i = 1; i < availableFrequencies.Length; i++)
+            {
+                maxFrequency = Mathf.Max(maxFrequency, availableFrequencies[i]);
+            }
+            OVRPlugin.systemDisplayFrequency = maxFrequency;
+        }
 
         // Fixed Foveated Rendering: renders the periphery at lower resolution, nearly
         // imperceptible to the user, large GPU shading cost reduction. Was not enabled
         // anywhere in the project.
         OVRManager.foveatedRenderingLevel = OVRManager.FoveatedRenderingLevel.HighTop;
         OVRManager.useDynamicFoveatedRendering = true;
-
-        // Keep CPU/GPU clocks from idling down to battery-saving levels mid-round; the
-        // OS still scales within this range based on actual utilization. SustainedHigh
-        // (not Boost - that's a 45s-max burst hint) is the right choice for continuous play.
     }
 }
