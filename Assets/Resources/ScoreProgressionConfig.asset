@@ -17,5 +17,5 @@ MonoBehaviour:
   sniperKillsRequired: 10
   paracaidistaKillsRequired: 10
   juggernautKillsRequired: 10
-  silverScoreRequired: 500
-  platinumScoreRequired: 1000
+  silverScoreRequired: 400
+  platinumScoreRequired: 800

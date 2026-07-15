@@ -29954,7 +29954,6 @@ MonoBehaviour:
   countdownDistanceFromCamera: 1.25
   countdownOffset: {x: 0, y: 0, z: 0}
   countdownPanelColor: {r: 0, g: 0, b: 0, a: 0.28}
-  defaultScorePerKill: 10
   menuSceneName: Sample Optimizada
   victoryCinematicSceneName: WinCinematic
   createHealthHudOnAwake: 1
