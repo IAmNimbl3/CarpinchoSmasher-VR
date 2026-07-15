@@ -71,6 +71,7 @@ public class DiegeticStartMenu : MonoBehaviour
     public void StartGame()
     {
         HasStarted = true;
+        ScoreManager.Instance.BeginNewRun();
 
         if (menuRoot != null)
         {

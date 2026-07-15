@@ -9957,9 +9957,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 4707780716576659588, guid: 97aa9b195d550d242ac4a5d521e2e4cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1013028954}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 97aa9b195d550d242ac4a5d521e2e4cb, type: 3}
+--- !u!4 &221707650 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4707780716576659588, guid: 97aa9b195d550d242ac4a5d521e2e4cb, type: 3}
+  m_PrefabInstance: {fileID: 221707649}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &223700471
 GameObject:
   m_ObjectHideFlags: 0
@@ -52777,7 +52785,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.31679302, y: 0.60835606}
   m_AnchorMax: {x: 0.68512547, y: 1}
-  m_AnchoredPosition: {x: -1.0751038, y: -0.00012541}
+  m_AnchoredPosition: {x: -1.0751038, y: -0.00012207031}
   m_SizeDelta: {x: 1306.76, y: 537.51}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1004112457
@@ -53074,6 +53082,81 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1813095348}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1013028953
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1013028954}
+  - component: {fileID: 1013028955}
+  m_Layer: 0
+  m_Name: TrophyShelfDisplay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1013028954
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1013028953}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 221707650}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1013028955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1013028953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b1d14b6e45b234a8aec4a3263140a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrophyShelfDisplay
+  trophySlots:
+  - trophy: 0
+    model: {fileID: 919132149155446097, guid: a6855c2e9a842394cb247447adefe3bc, type: 3}
+    localPosition: {x: -0.34, y: 0.45, z: 0.4}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    targetHeight: 0.28
+  - trophy: 1
+    model: {fileID: 919132149155446097, guid: 20b7d1d987478214ea02d255b51902cc, type: 3}
+    localPosition: {x: 0.34, y: 0.45, z: 0.4}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    targetHeight: 0.28
+  - trophy: 2
+    model: {fileID: 919132149155446097, guid: 6f102bb32aec36e4198e2394161b5abb, type: 3}
+    localPosition: {x: -0.34, y: 0.87, z: 0.4}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    targetHeight: 0.28
+  - trophy: 3
+    model: {fileID: 919132149155446097, guid: 25bb284bccac47b43bd205f8134d5d92, type: 3}
+    localPosition: {x: 0.34, y: 0.87, z: 0.4}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    targetHeight: 0.28
+  - trophy: 4
+    model: {fileID: 919132149155446097, guid: 7987a79baa314924fa34fd5a3ea8b1b4, type: 3}
+    localPosition: {x: -0.34, y: 1.29, z: 0.4}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    targetHeight: 0.28
+  - trophy: 5
+    model: {fileID: 919132149155446097, guid: a10809256e097394e8545ede997a80a5, type: 3}
+    localPosition: {x: 0.34, y: 1.29, z: 0.4}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    targetHeight: 0.28
 --- !u!1 &1013667303
 GameObject:
   m_ObjectHideFlags: 0

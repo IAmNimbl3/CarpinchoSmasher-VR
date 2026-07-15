@@ -39,9 +39,6 @@ public class GameRoundManager : MonoBehaviour
     [SerializeField] private Vector3 countdownOffset = Vector3.zero;
     [SerializeField] private Color countdownPanelColor = new Color(0f, 0f, 0f, 0.28f);
 
-    [Header("Scoring")]
-    [SerializeField, Min(0)] private int defaultScorePerKill = 10;
-
     [Header("Defeat")]
     [SerializeField] private string menuSceneName = "Sample Optimizada";
 
@@ -56,10 +53,9 @@ public class GameRoundManager : MonoBehaviour
     [SerializeField] private Color healthHudColor = new Color(0f, 0f, 0f, 0.55f);
 
     public int CurrentRoundIndex { get; private set; }
-    public int Score { get; private set; }
+    public int Score => ScoreManager.Instance.CurrentRunScore;
     public bool WaitingForNextRound { get; private set; }
 
-    private readonly Dictionary<CarpinchoType, int> _killsByType = new Dictionary<CarpinchoType, int>();
     private readonly HashSet<Enemy> _subscribedEnemies = new HashSet<Enemy>();
 
     private bool _roundEndPending;
@@ -89,13 +85,11 @@ public class GameRoundManager : MonoBehaviour
     private readonly HashSet<Button> _hoveredRoundButtons = new HashSet<Button>();
     private int _appliedPlayerMaxHealth = -1;
 
-    public IReadOnlyDictionary<CarpinchoType, int> KillsByType => _killsByType;
+    public IReadOnlyDictionary<CarpinchoType, int> KillsByType => ScoreManager.Instance.CurrentRunKills;
 
     private void Awake()
     {
         ResolveReferences();
-        InitializeKillCounters();
-
         if (createRoundUiOnAwake)
         {
             CreateRoundUi();
@@ -224,7 +218,7 @@ public class GameRoundManager : MonoBehaviour
 
     public int GetKills(CarpinchoType type)
     {
-        return _killsByType.TryGetValue(type, out int value) ? value : 0;
+        return ScoreManager.Instance.GetCurrentRunKills(type);
     }
 
     public void ContinueToNextRound()
@@ -344,14 +338,6 @@ public class GameRoundManager : MonoBehaviour
             : Camera.main != null ? Camera.main.transform : null;
     }
 
-    private void InitializeKillCounters()
-    {
-        foreach (CarpinchoType type in Enum.GetValues(typeof(CarpinchoType)))
-        {
-            _killsByType[type] = 0;
-        }
-    }
-
     private void HandlePhaseChanged(int phaseIndex)
     {
         if (phaseIndex <= 0)
@@ -393,8 +379,7 @@ public class GameRoundManager : MonoBehaviour
         enemy.Died -= HandleEnemyDied;
         _subscribedEnemies.Remove(enemy);
 
-        Score += enemy.ScoreValue > 0 ? enemy.ScoreValue : defaultScorePerKill;
-        _killsByType[enemy.Type] = GetKills(enemy.Type) + 1;
+        ScoreManager.Instance.RegisterKill(enemy.Type, enemy.ScoreValue);
 
         TryShowPendingRoundComplete();
     }
